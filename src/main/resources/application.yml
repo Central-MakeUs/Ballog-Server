@@ -1,0 +1,43 @@
+server:
+  port : 8080
+
+spring :
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url : ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET}
+            redirect-uri: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI}
+            authorization-grant-type: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE}
+            client-name: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_NAME}
+
+        provider:
+          kakao:
+            authorization-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_AUTHORIZATION_URI}
+            token-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_TOKEN_URI}
+            user-info-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_INFO_URI}
+            user-name-attribute: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE}
+
+kakao:
+  admin-key: ${KAKAO_ADMIN_KEY}
+
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
