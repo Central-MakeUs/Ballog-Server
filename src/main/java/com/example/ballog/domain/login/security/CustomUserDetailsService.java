@@ -19,13 +19,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         Long id = Long.valueOf(userId);
 
-//        System.out.println("유저 pk : " + id);
 
-        User user = userRepository.findByUserId(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("유저를 찾을 수 없습니다. : " + userId));
 
 
-//        System.out.println("찾은 유저 : " + user);
 
         return new CustomUserDetails(user);
     }
