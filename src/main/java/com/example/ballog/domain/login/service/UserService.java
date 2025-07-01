@@ -6,6 +6,8 @@ import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.RefreshTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.domain.login.security.CustomUserDetails;
+import com.example.ballog.global.common.exception.CustomException;
+import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.BasicResponse;
 import com.nimbusds.jose.shaded.gson.JsonObject;
 import com.nimbusds.jose.shaded.gson.JsonParser;
@@ -27,6 +29,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 
 @Service
@@ -130,7 +133,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    //로그인
     public ResponseEntity<BasicResponse<Object>> processLogin(User user, boolean isSignup) {
         String refreshToken = tokenService.getRefreshToken(user);
 
@@ -167,6 +169,17 @@ public class UserService {
             refreshTokenRepository.save(refreshToken);
         });
     }
+
+    @Transactional
+    public void withdraw(Long userId) {
+
+        refreshTokenRepository.findByUserUserId(userId)
+                .ifPresent(refreshTokenRepository::delete);
+
+        userRepository.findById(userId)
+                .ifPresent(userRepository::delete);
+    }
+
 
 
 

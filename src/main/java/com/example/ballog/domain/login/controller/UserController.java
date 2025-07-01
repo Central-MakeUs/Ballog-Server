@@ -2,7 +2,6 @@ package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
 import com.example.ballog.domain.login.entity.User;
-import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.domain.login.service.UserService;
@@ -114,5 +113,29 @@ public class UserController {
         }
     }
 
+    @PostMapping("/withdraw")
+    @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
+    public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
+        try {
+            String bearerToken = request.getHeader("Authorization");
+
+            if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
+            }
+            String accessToken = bearerToken.substring(7);
+            Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
+            userService.withdraw(userId);
+
+            return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("회원탈퇴 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
 
 }
