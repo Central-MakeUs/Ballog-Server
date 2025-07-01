@@ -1,6 +1,7 @@
 package com.example.ballog.domain.login.service;
 
 import com.example.ballog.domain.login.dto.response.KakaoTokenResponse;
+import com.example.ballog.domain.login.entity.RefreshToken;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.RefreshTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -102,8 +104,6 @@ public class UserService {
         throw new RuntimeException("유저의 정보가 없습니다.");
     }
 
-
-    // 회원가입 (카카오에서 받은 정보를 DB에 저장)
     public User signup(User user) {
         return userRepository.save(user);
     }
@@ -133,7 +133,8 @@ public class UserService {
     //로그인
     public ResponseEntity<BasicResponse<Object>> processLogin(User user, boolean isSignup) {
         String refreshToken = tokenService.getRefreshToken(user);
-        if (refreshToken == null) {
+
+        if (refreshToken == null || refreshToken.isEmpty()) { //새로 회원가입하는 유저 or 로그아웃하고 로그인하는 유저
             refreshToken = tokenService.createRefreshToken(user);
             tokenService.saveRefreshToken(user, refreshToken);
         }
@@ -157,6 +158,14 @@ public class UserService {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(BasicResponse.ofSuccess(responseData, message));
+    }
+
+    @Transactional
+    public void invalidateRefreshTokenByUserId(Long userId) {
+        refreshTokenRepository.findByUserUserId(userId).ifPresent(refreshToken -> {
+            refreshToken.setRefreshToken(null);
+            refreshTokenRepository.save(refreshToken);
+        });
     }
 
 
