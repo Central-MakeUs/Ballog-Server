@@ -12,8 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,21 +38,30 @@ public class TokenService {
     // RefreshToken 생성
     public String createRefreshToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getUserId().toString())
+                .setSubject("access-token")
+                .claim("userId", user.getUserId())
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 3600000)) //1주일
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
     // RefreshToken 저장
+    @Transactional
     public void saveRefreshToken(User user, String refreshToken) {
-
-        RefreshToken token = new RefreshToken();
-
-        token.setRefreshToken(refreshToken);
-        token.setUser(user);
-        refreshTokenRepository.save(token);
+        Optional<RefreshToken> existing = refreshTokenRepository.findByUserUserId(user.getUserId());
+        if (existing.isPresent()) {
+            RefreshToken token = existing.get();
+            token.setRefreshToken(refreshToken);
+            refreshTokenRepository.save(token);
+        } else {
+            RefreshToken newToken = new RefreshToken();
+            newToken.setUser(user);
+            newToken.setRefreshToken(refreshToken);
+            refreshTokenRepository.save(newToken);
+        }
     }
+
 
     //RefreshToken 이용하여 AccessToken 재발급
     public String renewAccessToken(String refreshToken) {
@@ -74,23 +85,19 @@ public class TokenService {
         return null;
     }
 
-    // AccessToken을 이용하여 유저 정보 조회
-    public User getUserFromAccessToken(String accessToken) {
-        try {
-            // AccessToken에서 Claims(페이로드) 추출
-            Claims claims = Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .parseClaimsJws(accessToken)
-                    .getBody();
+    public Long extractUserIdFromAccessToken(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
+                .getBody();
 
-            // Claims에서 이메일 추출
-            String userId = claims.getSubject();
+        String subject = claims.getSubject();
 
-            return userRepository.findByUserId(Long.valueOf(userId))
-                    .orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다. : " + userId));
-
-        } catch (SignatureException e) {
-            throw new RuntimeException("유효하지 않은 토큰입니다.");
+        if (subject == null) {
+            throw new RuntimeException("토큰에 subject가 없습니다.");
         }
+
+        return Long.valueOf(subject);
     }
+
 }
