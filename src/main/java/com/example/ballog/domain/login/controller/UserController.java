@@ -1,6 +1,7 @@
 package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
+import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.TokenService;
@@ -15,14 +16,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1")
 @Tag(name = "Authentication", description = "Authentication API")
 public class UserController {
     private final UserService userService;
@@ -31,7 +29,7 @@ public class UserController {
     @Value("${kakao.admin-key}")
     private String adminKey;
 
-    @PostMapping("/login/kakao")
+    @PostMapping("/auth/login/kakao")
     @Operation(summary = "카카오 회원가입 및 로그인", description = "카카오 회원가입 및 로그인 처리")
     public ResponseEntity<BasicResponse<Object>> kakaoSignup(
             @RequestParam(name = "code") String code) {
@@ -63,7 +61,7 @@ public class UserController {
     }
 
 
-    @PostMapping("/signup")
+    @PostMapping("/auth/signup")
     @Operation(summary = "회원가입시 추가 정보 저장", description = "추가정보인 응원팀과 닉네임 정보를 저장")
     public ResponseEntity<BasicResponse<String>> completeSignup(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -90,8 +88,8 @@ public class UserController {
         }
     }
 
-    @PostMapping("/logout")
-    @Operation(summary = "로그아웃", description = "로그아웃 API")
+    @PostMapping("/auth/logout")
+    @Operation(summary = "로그아웃", description = "로그아웃 처리")
     public ResponseEntity<BasicResponse<String>> logout(HttpServletRequest request) {
         try {
             String bearerToken = request.getHeader("Authorization");
@@ -113,7 +111,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/withdraw")
+    @DeleteMapping("/auth/withdraw")
     @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
     public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
         try {
@@ -123,6 +121,7 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
             }
+
             String accessToken = bearerToken.substring(7);
             Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
             userService.withdraw(userId);
@@ -135,6 +134,29 @@ public class UserController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(BasicResponse.ofFailure("회원탈퇴 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+
+
+    //마이페이지 -> 유저정보 수정
+    @PatchMapping("/user/mypage")
+    @Operation(summary = "회원정보수정", description = "마이페이지에서 회원 정보 수정처리 - 응원팀&닉네임")
+    public ResponseEntity<BasicResponse<String>> updateUser(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UpdateUserRequest request) {
+        try {
+            System.out.println(">>> userDetails: " + userDetails);
+
+            Long userId = userDetails.getUser().getUserId();
+            userService.updateUser(userId, request);
+
+            return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 수정 완료"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
 
