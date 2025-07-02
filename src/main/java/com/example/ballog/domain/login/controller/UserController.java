@@ -2,6 +2,7 @@ package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
+import com.example.ballog.domain.login.dto.response.UserInfoResponse;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.TokenService;
@@ -146,7 +147,11 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UpdateUserRequest request) {
         try {
-            System.out.println(">>> userDetails: " + userDetails);
+
+            if (userDetails == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(BasicResponse.ofFailure("인증 정보가 없습니다.", HttpStatus.UNAUTHORIZED));
+            }
 
             Long userId = userDetails.getUser().getUserId();
             userService.updateUser(userId, request);
@@ -159,5 +164,31 @@ public class UserController {
                     .body(BasicResponse.ofFailure("서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
+
+
+    @GetMapping("/user/mypage")
+    @Operation(summary = "회원정보 조회", description = "마이페이지 -> 회원 정보 조회")
+    public ResponseEntity<BasicResponse<UserInfoResponse>> getUserInfo(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(BasicResponse.ofFailure("인증 정보가 없습니다.", HttpStatus.UNAUTHORIZED));
+        }
+
+        User user = userDetails.getUser();
+
+        UserInfoResponse response = new UserInfoResponse(
+                user.getUserId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getBaseballTeam().name(),
+                user.getIsNewUser(),
+                user.getRole().name()
+        );
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess(response));
+    }
+
 
 }
