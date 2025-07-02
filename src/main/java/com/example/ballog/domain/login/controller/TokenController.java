@@ -32,7 +32,7 @@ public class TokenController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
-        BasicResponse<String> response = BasicResponse.ofSuccess("새로운 AccessToken: " + newAccessToken);
+        BasicResponse<String> response = BasicResponse.ofSuccess(newAccessToken);
         return ResponseEntity.ok(response);
     }
 }
