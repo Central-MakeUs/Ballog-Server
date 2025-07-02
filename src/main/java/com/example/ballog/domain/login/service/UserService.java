@@ -1,7 +1,8 @@
 package com.example.ballog.domain.login.service;
 
+import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
 import com.example.ballog.domain.login.dto.response.KakaoTokenResponse;
-import com.example.ballog.domain.login.entity.RefreshToken;
+import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.RefreshTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
@@ -181,7 +182,20 @@ public class UserService {
     }
 
 
+    @Transactional
+    public void updateUser(Long userId, UpdateUserRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
+        if (request.getNickname() != null) {
+            validateNickname(request.getNickname());
+            user.setNickname(request.getNickname());
+        }
+
+        if (request.getBaseballTeam() != null) {
+            user.setBaseballTeam(BaseballTeam.valueOf(request.getBaseballTeam()));
+        }
+    }
 
 
 }
