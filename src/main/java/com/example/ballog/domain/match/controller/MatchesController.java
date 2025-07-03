@@ -3,6 +3,7 @@ package com.example.ballog.domain.match.controller;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
+import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -10,6 +11,7 @@ import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -27,7 +29,7 @@ public class MatchesController {
 
     @PostMapping
     @Operation(summary = "경기일정 등록", description = "관리자만 경기일정을 등록할 수 있습니다.")
-    public ResponseEntity<BasicResponse<String>> createMatch(
+    public ResponseEntity<BasicResponse<MatchesResponse>> createMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchesRequest request) {
 
@@ -35,8 +37,11 @@ public class MatchesController {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
-        matchesService.createMatches(request);
-        return ResponseEntity.ok(BasicResponse.ofSuccess("경기일정이 등록 성공"));
+        MatchesResponse response = matchesService.createMatches(request);
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("경기일정이 등록 성공", HttpStatus.OK.value(), response)
+        );
     }
+
 
 }
