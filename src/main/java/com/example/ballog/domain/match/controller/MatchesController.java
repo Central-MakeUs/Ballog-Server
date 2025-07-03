@@ -29,7 +29,7 @@ public class MatchesController {
     private final MatchesService matchesService;
 
     @PostMapping
-    @Operation(summary = "경기일정 등록", description = "관리자만 경기일정을 등록할 수 있습니다.")
+    @Operation(summary = "경기일정 등록", description = "관리자만이 경기일정을 등록 가능")
     public ResponseEntity<BasicResponse<MatchesResponse>> createMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchesRequest request) {
@@ -63,11 +63,29 @@ public class MatchesController {
     }
 
     @GetMapping("/{matchId}")
-    @Operation(summary = "경기 일정 상세 조회", description = "특정 경기의 상세 정보를 조회합니다.")
+    @Operation(summary = "경기 일정 상세 조회", description = "특정 경기의 상세 정보를 조회")
     public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId")  Long matchId) {
         MatchesResponse response = matchesService.getMatchDetail(matchId);
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("경기 상세 조회 성공", HttpStatus.OK.value(), response)
+        );
+    }
+
+    @PatchMapping("{matchId}")
+    @Operation(summary = "경기일정 수정", description = "관리자만이 경기일정을 수정")
+    public ResponseEntity<BasicResponse<MatchesResponse>> updateMatch(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("matchId") Long matchId,
+            @RequestBody MatchesRequest request) {
+
+        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        MatchesResponse updatedMatch = matchesService.updateMatch(matchId, request);
+
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("경기일정 수정 성공", HttpStatus.OK.value(), updatedMatch)
         );
     }
 
