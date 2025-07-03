@@ -15,9 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -43,5 +46,13 @@ public class MatchesController {
         );
     }
 
+    @GetMapping("/matches/today")
+    @Operation(summary = "오늘 경기 조회", description = "오늘 날짜의 경기 일정만 조회")
+    public ResponseEntity<BasicResponse<List<MatchesResponse>>> getTodayMatches() {
+        List<MatchesResponse> todayMatches = matchesService.getTodayMatches();
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("오늘 경기 일정 조회 성공", HttpStatus.OK.value(), todayMatches)
+        );
+    }
 
 }

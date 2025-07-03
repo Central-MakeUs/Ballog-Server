@@ -7,6 +7,10 @@ import com.example.ballog.domain.match.repository.MatchesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class MatchesService {
@@ -32,5 +36,14 @@ public class MatchesService {
                 saved.getStadium(),
                 saved.getMatchesResult()
         );
+    }
+
+
+    public List<MatchesResponse> getTodayMatches() {
+        LocalDate today = LocalDate.now();
+        List<Matches> matchesList = matchesRepository.findAllByMatchesDate(today);
+        return matchesList.stream()
+                .map(MatchesResponse::from)
+                .collect(Collectors.toList());
     }
 }
