@@ -5,6 +5,8 @@ import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
+import com.example.ballog.global.common.exception.CustomException;
+import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -60,6 +62,14 @@ public class MatchesService {
                         Collectors.mapping(MatchesGroupedResponse::from, Collectors.toList())
                 ));
     }
+
+
+    public MatchesResponse getMatchDetail(Long matchId) {
+        Matches match = matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        return MatchesResponse.from(match);
+    }
+
 
 
 }
