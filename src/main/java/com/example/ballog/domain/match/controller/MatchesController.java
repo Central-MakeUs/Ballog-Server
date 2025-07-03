@@ -89,6 +89,24 @@ public class MatchesController {
         );
     }
 
+    @DeleteMapping("{matchId}")
+    @Operation(summary = "경기일정 삭제", description = "관리자만이 경기일정을 삭제")
+    public ResponseEntity<BasicResponse<String>> deleteMatch(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("matchId")  Long matchId) {
+
+        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        matchesService.deleteMatch(matchId);
+
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("경기일정 삭제 성공")
+        );
+    }
+
+
 
 
 

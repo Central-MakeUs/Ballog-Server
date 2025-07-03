@@ -99,6 +99,15 @@ public class MatchesService {
     }
 
 
+    public void deleteMatch(Long matchId) {
+        Matches match = matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        matchesRepository.delete(match);
+    }
+
+
+
 
 
 
