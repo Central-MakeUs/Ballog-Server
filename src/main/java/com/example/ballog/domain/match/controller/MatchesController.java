@@ -62,6 +62,16 @@ public class MatchesController {
         );
     }
 
+    @GetMapping("/{matchId}")
+    @Operation(summary = "경기 일정 상세 조회", description = "특정 경기의 상세 정보를 조회합니다.")
+    public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId")  Long matchId) {
+        MatchesResponse response = matchesService.getMatchDetail(matchId);
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("경기 상세 조회 성공", HttpStatus.OK.value(), response)
+        );
+    }
+
+
 
 
 }
