@@ -7,6 +7,8 @@ import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.domain.login.service.UserService;
+import com.example.ballog.global.common.exception.CustomException;
+import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -57,7 +60,7 @@ public class UserController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+                    .body(BasicResponse.ofFailure("카카오 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -68,75 +71,55 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody SignupRequest request) {
 
-        try {
-            User user = userDetails.getUser();
-
-            userService.validateNickname(request.getNickname());
-
-            user.setBaseballTeam(request.getBaseballTeam());
-            user.setNickname(request.getNickname());
-            user.setIsNewUser(false);
-
-            userService.updateUser(user);
-
-            return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입이 완료되었습니다."));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
+
+        User user = userDetails.getUser();
+
+        userService.validateNickname(request.getNickname());
+
+        user.setBaseballTeam(request.getBaseballTeam());
+        user.setNickname(request.getNickname());
+        user.setIsNewUser(false);
+
+        userService.updateUser(user);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입이 완료되었습니다."));
     }
+
 
     @PostMapping("/auth/logout")
     @Operation(summary = "로그아웃", description = "로그아웃 처리")
-    public ResponseEntity<BasicResponse<String>> logout(HttpServletRequest request) {
-        try {
-            String bearerToken = request.getHeader("Authorization");
+    public ResponseEntity<BasicResponse<String>> logout(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-            if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
-            }
-
-            String accessToken = bearerToken.substring(7);
-            Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
-            userService.invalidateRefreshTokenByUserId(userId);
-
-            return ResponseEntity.ok(BasicResponse.ofSuccess("로그아웃 성공"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
+
+        Long userId = userDetails.getUser().getUserId();
+        userService.invalidateRefreshTokenByUserId(userId);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("로그아웃 성공"));
     }
+
 
     @DeleteMapping("/auth/withdraw")
     @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
-    public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
-        try {
-            String bearerToken = request.getHeader("Authorization");
+    public ResponseEntity<BasicResponse<String>> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-            if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
-            }
-
-            String accessToken = bearerToken.substring(7);
-            Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
-            userService.withdraw(userId);
-
-            return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("회원탈퇴 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
+
+        Long userId = userDetails.getUser().getUserId();
+        userService.withdraw(userId);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
     }
+
 
 
 
@@ -146,24 +129,17 @@ public class UserController {
     public ResponseEntity<BasicResponse<String>> updateUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UpdateUserRequest request) {
-        try {
 
-            if (userDetails == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(BasicResponse.ofFailure("인증 정보가 없습니다.", HttpStatus.UNAUTHORIZED));
-            }
-
-            Long userId = userDetails.getUser().getUserId();
-            userService.updateUser(userId, request);
-
-            return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 수정 완료"));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR));
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
+
+        Long userId = userDetails.getUser().getUserId();
+        userService.updateUser(userId, request);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 수정 완료"));
     }
+
 
 
     @GetMapping("/user/mypage")
@@ -172,8 +148,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         if (userDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(BasicResponse.ofFailure("인증 정보가 없습니다.", HttpStatus.UNAUTHORIZED));
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         User user = userDetails.getUser();
@@ -189,6 +164,7 @@ public class UserController {
 
         return ResponseEntity.ok(BasicResponse.ofSuccess(response));
     }
+
 
 
 }

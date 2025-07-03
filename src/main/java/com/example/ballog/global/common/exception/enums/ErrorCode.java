@@ -17,9 +17,14 @@ public enum ErrorCode {
     INVALID_TOKEN(402, "JWT003", "유효하지 않은 토큰입니다."),
 
     //USER
-    ALREADY_EXIST_USER(403, "USER001", "이미 존재하는 사용자입니다."),
-    INVALID_USER(404, "USER002", "존재하지 않는 사용자입니다."),
-    DUPLICATE_NICKNAME(405, "USER003", "이미 존재하는 닉네임입니다."),
+    UNAUTHORIZED(403, "AUTH001", "인증 정보가 없습니다."),
+    ALREADY_EXIST_USER(404, "USER001", "이미 존재하는 사용자입니다."),
+    INVALID_USER(405, "USER002", "존재하지 않는 사용자입니다."),
+
+    // 닉네임 관련
+    INVALID_NICKNAME_LENGTH(407, "USER003", "닉네임은 1자 이상 10자 이하이어야 합니다."),
+    INVALID_NICKNAME_FORMAT(407, "USER004", "닉네임은 한글, 영어, 숫자만 사용할 수 있습니다."),
+    DUPLICATE_NICKNAME(407, "USER005", "이미 존재하는 닉네임입니다."),
 
     // ROLE
     ACCESS_DENIED(406, "ROLE001", "접근 권한이 없습니다.");
