@@ -32,7 +32,7 @@ public class MatchesController {
 
     @PostMapping
     @Operation(summary = "경기일정 등록", description = "관리자만 경기일정을 등록할 수 있습니다.")
-    public ResponseEntity<BasicResponse<String>> createMatch(
+    public ResponseEntity<BasicResponse<MatchesResponse>> createMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchesRequest request) {
 
@@ -40,8 +40,10 @@ public class MatchesController {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
-        matchesService.createMatches(request);
-        return ResponseEntity.ok(BasicResponse.ofSuccess("경기일정이 등록 성공"));
+        MatchesResponse response = matchesService.createMatches(request);
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("경기일정이 등록 성공", HttpStatus.OK.value(), response)
+        );
     }
 
     @GetMapping("/matches/today")
@@ -52,6 +54,5 @@ public class MatchesController {
                 BasicResponse.ofSuccess("오늘 경기 일정 조회 성공", HttpStatus.OK.value(), todayMatches)
         );
     }
-
 
 }
