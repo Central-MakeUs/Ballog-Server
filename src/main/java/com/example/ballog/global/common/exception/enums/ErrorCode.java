@@ -27,7 +27,11 @@ public enum ErrorCode {
     DUPLICATE_NICKNAME(407, "USER005", "이미 존재하는 닉네임입니다."),
 
     // ROLE
-    ACCESS_DENIED(406, "ROLE001", "접근 권한이 없습니다.");
+    ACCESS_DENIED(406, "ROLE001", "접근 권한이 없습니다."),
+
+    //MATCH
+    MATCH_NOT_FOUND(408,"MATCH001","해당 경기 정보를 찾을 수 없습니다.");
+
 
 
 
