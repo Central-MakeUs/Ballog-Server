@@ -3,6 +3,7 @@ package com.example.ballog.domain.match.controller;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
+import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
@@ -14,15 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/match")
 @Tag(name = "Match", description = "Match Schedule API")
@@ -46,7 +44,7 @@ public class MatchesController {
         );
     }
 
-    @GetMapping("/matches/today")
+    @GetMapping
     @Operation(summary = "오늘 경기 조회", description = "오늘 날짜의 경기 일정만 조회")
     public ResponseEntity<BasicResponse<List<MatchesResponse>>> getTodayMatches() {
         List<MatchesResponse> todayMatches = matchesService.getTodayMatches();
@@ -54,5 +52,16 @@ public class MatchesController {
                 BasicResponse.ofSuccess("오늘 경기 일정 조회 성공", HttpStatus.OK.value(), todayMatches)
         );
     }
+
+    @GetMapping("/all")
+    @Operation(summary = "전체 경기 일정 조회", description = "등록된 모든 경기 일정을 날짜별로 그룹화하여 조회")
+    public ResponseEntity<BasicResponse<Map<String, List<MatchesGroupedResponse>>>> getAllMatchesGroupedByDate() {
+        Map<String, List<MatchesGroupedResponse>> groupedMatches = matchesService.getAllMatchesGroupedByDate();
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("전체 경기 일정 조회 성공", HttpStatus.OK.value(), groupedMatches)
+        );
+    }
+
+
 
 }

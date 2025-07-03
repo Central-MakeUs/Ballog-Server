@@ -1,6 +1,7 @@
 package com.example.ballog.domain.match.service;
 
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
+import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,4 +49,17 @@ public class MatchesService {
                 .map(MatchesResponse::from)
                 .collect(Collectors.toList());
     }
+
+    public Map<String, List<MatchesGroupedResponse>> getAllMatchesGroupedByDate() {
+        List<Matches> matchesList = matchesRepository.findAll();
+
+        return matchesList.stream()
+                .collect(Collectors.groupingBy(
+                        match -> match.getMatchesDate().toString(),
+                        TreeMap::new,
+                        Collectors.mapping(MatchesGroupedResponse::from, Collectors.toList())
+                ));
+    }
+
+
 }
