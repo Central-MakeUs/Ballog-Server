@@ -118,17 +118,18 @@ public class UserService {
 
     public void validateNickname(String nickname) {
         if (nickname == null || nickname.length() < 1 || nickname.length() > 10) {
-            throw new IllegalArgumentException("닉네임은 1자 이상 10자 이하이어야 합니다.");
+            throw new CustomException(ErrorCode.INVALID_NICKNAME_LENGTH);
         }
 
         if (!nickname.matches("^[가-힣a-zA-Z0-9]+$")) {
-            throw new IllegalArgumentException("닉네임은 한글, 영어, 숫자만 사용할 수 있습니다.");
+            throw new CustomException(ErrorCode.INVALID_NICKNAME_FORMAT);
         }
 
         if (userRepository.findByNickname(nickname).isPresent()) {
-            throw new IllegalArgumentException("중복된 닉네임입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }
     }
+
 
     public void updateUser(User user) {
         userRepository.save(user);
