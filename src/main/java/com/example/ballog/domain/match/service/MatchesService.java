@@ -70,6 +70,36 @@ public class MatchesService {
         return MatchesResponse.from(match);
     }
 
+    public MatchesResponse updateMatch(Long matchId, MatchesRequest request) {
+        Matches match = matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        if (request.getMatchesDate() != null) {
+            match.setMatchesDate(request.getMatchesDate());
+        }
+
+        if (request.getMatchesTime() != null) {
+            match.setMatchesTime(request.getMatchesTime());
+        }
+
+        if (request.getHomeTeam() != null) {
+            match.setHomeTeam(request.getHomeTeam());
+        }
+
+        if (request.getAwayTeam() != null) {
+            match.setAwayTeam(request.getAwayTeam());
+        }
+
+        if (request.getStadium() != null) {
+            match.setStadium(request.getStadium());
+        }
+
+        Matches updatedMatch = matchesRepository.save(match);
+        return MatchesResponse.from(updatedMatch);
+    }
+
+
+
 
 
 }
