@@ -12,41 +12,39 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BasicResponse<T>{
+public class BasicResponse<T> {
     private String message;
-    private Integer statusCode;
+    private Integer status;
+    private String success;
     private T data;
 
+    private static final String DEFAULT_MESSAGE = "success";
 
-    private static final String SUCCESS = "Success";
-
-    public static <T> BasicResponse<T> of(HttpStatus statusCode, String message, T data) {
-        return new BasicResponse<>(message, statusCode.value(), data);
+    public static <T> BasicResponse<T> of(HttpStatus status, String successMessage, T data) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, status.value(), successMessage, data);
     }
 
-    public static BasicResponse<Void> ofMessage(String message) {
-        return new BasicResponse<>(message, HttpStatus.OK.value(), null);
-    }
-    public static <T> BasicResponse<T> ofSuccess(T data){
-        return new BasicResponse<>(SUCCESS, HttpStatus.OK.value(), data);
-    }
-    public static <T> BasicResponse<T> ofSuccess(String message, int statusCode, T data) {
-        return new BasicResponse<>(message, statusCode, data);
+    public static BasicResponse<Void> ofMessage(String successMessage) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value(), successMessage, null);
     }
 
-
-    public static <T> BasicResponse<T> ofSuccess(T data, String message) {
-        return new BasicResponse<>(message, HttpStatus.OK.value(), data);
+    public static <T> BasicResponse<T> ofSuccess(T data) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value(), "요청 성공", data);
     }
 
-    public static <T> BasicResponse<T> ofFailure(String message, HttpStatus status) {
-        return new BasicResponse<>(message, status.value(), null);
+    public static <T> BasicResponse<T> ofSuccess(String successMessage, int statusCode, T data) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, statusCode, successMessage, data);
+    }
+
+    public static <T> BasicResponse<T> ofSuccess(T data, String successMessage) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value(), successMessage, data);
+    }
+
+    public static <T> BasicResponse<T> ofFailure(String errorMessage, HttpStatus status) {
+        return new BasicResponse<>("fail", status.value(), errorMessage, null);
     }
 
     public static <T> BasicResponse<T> ofFailure(ErrorCode errorCode) {
-        return new BasicResponse<>(errorCode.getMessage(), errorCode.getStatus(), null);
+        return new BasicResponse<>("fail", errorCode.getStatus(), errorCode.getMessage(), null);
     }
-
-
-
 }
