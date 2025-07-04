@@ -91,6 +91,14 @@ public class UserService {
     }
 
     @Transactional
+    public void invalidateRefreshTokenByUserId(Long userId) {
+        refreshTokenRepository.findByUserUserId(userId).ifPresent(refreshToken -> {
+            refreshToken.setRefreshToken(null);
+            refreshTokenRepository.save(refreshToken);
+        });
+    }
+
+    @Transactional
     public void withdraw(Long userId) {
 
         List<OAuthToken> tokens = oAuthTokenRepository.findAllByUserUserId(userId);

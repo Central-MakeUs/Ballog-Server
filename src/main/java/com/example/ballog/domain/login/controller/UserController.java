@@ -95,9 +95,8 @@ public class UserController {
         return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입이 완료되었습니다."));
     }
 
-
     @PostMapping("/auth/logout")
-    @Operation(summary = "로그아웃", description = "로그아웃 처리")
+    @Operation(summary = "로그아웃", description = "카카오 및 로그아웃 API")
     public ResponseEntity<BasicResponse<String>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -105,49 +104,41 @@ public class UserController {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        Long userId = userDetails.getUser().getUserId();
-        userService.invalidateRefreshTokenByUserId(userId);
+        User user = userDetails.getUser();
+
+        String kakaoAccessToken = oAuthTokenService.getAccessTokenByUser(user);
+        oAuthTokenService.logoutFromKakao(kakaoAccessToken);
+
+        oAuthTokenService.invalidateTokensByUser(user);
+        userService.invalidateRefreshTokenByUserId(user.getUserId());
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("로그아웃 성공"));
     }
 
-
     @DeleteMapping("/auth/withdraw")
-    @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
-    public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
+    @Operation(summary = "회원탈퇴", description = "카카오 및 회원탈퇴 API")
+    public ResponseEntity<BasicResponse<String>> withdraw(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            String bearerToken = request.getHeader("Authorization");
-
-            if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
+            if (userDetails == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
             }
-            String accessToken = bearerToken.substring(7);
-            Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
 
-            User user = userService.findById(userId);
+            User user = userDetails.getUser();
+
             oAuthTokenService.unlinkFromKakao(user);
-            userService.withdraw(userId);
+            userService.withdraw(user.getUserId());
 
             return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
-        }  catch (CustomException e) {
+        } catch (CustomException e) {
             if (e.getErrorCode() == ErrorCode.REFRESH_TOKEN_EXPIRED) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(BasicResponse.ofFailure("재로그인이 필요합니다. 토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED));
             }
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
-        }catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(BasicResponse.ofFailure("회원탈퇴 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
- 
-
 
 
 
