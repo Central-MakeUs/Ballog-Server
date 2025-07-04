@@ -1,10 +1,12 @@
 package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
+import com.example.ballog.domain.login.dto.response.KakaoOAuthTokenResponse;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
 import com.example.ballog.domain.login.dto.response.UserInfoResponse;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
+import com.example.ballog.domain.login.service.OAuthTokenService;
 import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
@@ -21,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.MediaType;
 
 @Controller
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final TokenService tokenService;
+    private final OAuthTokenService oAuthTokenService;
 
     @Value("${kakao.admin-key}")
     private String adminKey;
@@ -39,23 +43,26 @@ public class UserController {
             @RequestParam(name = "code") String code) {
 
         try {
-            String accessToken = userService.getKakaoAccessToken(code);
-            User kakaoUser = userService.getKakaoUser(accessToken);
+            KakaoOAuthTokenResponse fullToken = oAuthTokenService.getFullKakaoTokenResponse(code);
+            String accessToken = fullToken.getAccessToken();
+
+            User kakaoUser = oAuthTokenService.getKakaoUser(accessToken);
             User user = userService.findByEmail(kakaoUser.getEmail());
 
             if (user == null) {
-                //1차 회원가입 -> 카카오에서 주는 정보 저장
+                // 1차 회원가입 -> 카카오에서 주는 정보 저장
                 User newUser = new User();
                 newUser.setKakaoId(kakaoUser.getKakaoId());
                 newUser.setEmail(kakaoUser.getEmail());
 
                 User savedUser = userService.signup(newUser);
+                oAuthTokenService.saveKakaoToken(savedUser, fullToken);
                 return userService.processLogin(savedUser, true);
-
             }
-            // 이미 가입된 사용자인 경우 -> 로그인 처리
-            return userService.processLogin(user, false);
 
+            // 이미 가입된 사용자인 경우 -> 로그인 처리
+            oAuthTokenService.saveKakaoToken(user, fullToken);
+            return userService.processLogin(user, false);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,18 +114,39 @@ public class UserController {
 
     @DeleteMapping("/auth/withdraw")
     @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
-    public ResponseEntity<BasicResponse<String>> withdraw(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<BasicResponse<String>> withdraw(HttpServletRequest request) {
+        try {
+            String bearerToken = request.getHeader("Authorization");
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(BasicResponse.ofFailure("Authorization 헤더가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED));
+            }
+            String accessToken = bearerToken.substring(7);
+            Long userId = tokenService.extractUserIdFromAccessToken(accessToken);
+
+            User user = userService.findById(userId);
+            oAuthTokenService.unlinkFromKakao(user);
+            userService.withdraw(userId);
+
+            return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
+        }  catch (CustomException e) {
+            if (e.getErrorCode() == ErrorCode.REFRESH_TOKEN_EXPIRED) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(BasicResponse.ofFailure("재로그인이 필요합니다. 토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED));
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
+        }catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("회원탈퇴 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
-
-        Long userId = userDetails.getUser().getUserId();
-        userService.withdraw(userId);
-
-        return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
     }
+ 
 
 
 
@@ -149,6 +177,7 @@ public class UserController {
 
         if (userDetails == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
+
         }
 
         User user = userDetails.getUser();
@@ -164,7 +193,5 @@ public class UserController {
 
         return ResponseEntity.ok(BasicResponse.ofSuccess(response));
     }
-
-
 
 }
