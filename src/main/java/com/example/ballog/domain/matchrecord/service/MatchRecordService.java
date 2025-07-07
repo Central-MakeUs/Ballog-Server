@@ -33,6 +33,7 @@ public class MatchRecordService {
         record.setWatchCnt(cnt+1);
         record.setResult(request.getResult());
 
+        record.setBaseballTeam(user.getBaseballTeam());
         matchRecordRepository.save(record);
 
         return MatchRecordResponse.builder()
@@ -45,6 +46,7 @@ public class MatchRecordService {
                 .userId(user.getUserId())
                 .watchCnt(record.getWatchCnt())
                 .result(record.getResult())
+                .baseballTeam(record.getBaseballTeam())
                 .build();
     }
 
