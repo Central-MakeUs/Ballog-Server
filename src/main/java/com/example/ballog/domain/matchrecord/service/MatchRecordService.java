@@ -3,7 +3,6 @@ package com.example.ballog.domain.matchrecord.service;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
-import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
@@ -12,8 +11,12 @@ import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -59,6 +62,27 @@ public class MatchRecordService {
         matchRecord.setResult(result);
     }
 
+    @Scheduled(fixedDelay = 60 * 60 * 1000)
+    @Transactional
+    public void autoUnfinishedRecords() {
+        LocalDateTime now = LocalDateTime.now();
+
+        List<MatchRecord> pendingRecords = matchRecordRepository.findAllByResultIsNull();
+
+        for (MatchRecord record : pendingRecords) {
+            Matches match = record.getMatches();
+            LocalDateTime matchDateTime = LocalDateTime.of(
+                    match.getMatchesDate(),
+                    match.getMatchesTime()
+            );
+
+            if (matchDateTime.plusHours(8).isBefore(now)) {
+                record.setResult(Result.SKIP);
+            }
+        }
+    }
+
+
     @Transactional(readOnly = true)
     public MatchRecord findById(Long recordId) {
         return matchRecordRepository.findById(recordId)
@@ -70,9 +94,6 @@ public class MatchRecordService {
         MatchRecord record = findById(recordId);
         matchRecordRepository.delete(record);
     }
-
-
-
 
 
 }
