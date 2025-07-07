@@ -59,6 +59,19 @@ public class MatchRecordService {
         matchRecord.setResult(result);
     }
 
+    @Transactional(readOnly = true)
+    public MatchRecord findById(Long recordId) {
+        return matchRecordRepository.findById(recordId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
+    }
+
+    @Transactional
+    public void deleteRecord(Long recordId) {
+        MatchRecord record = findById(recordId);
+        matchRecordRepository.delete(record);
+    }
+
+
 
 
 
