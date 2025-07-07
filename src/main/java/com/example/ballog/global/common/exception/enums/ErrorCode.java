@@ -36,7 +36,9 @@ public enum ErrorCode {
     MATCH_NOT_FOUND(408,"MATCH001","해당 경기 정보를 찾을 수 없습니다."),
 
     //MATCH_RECORD
-    NOT_FOUND_RECORD(408,"MATCH_RECORD001","해당 직관기록을 찾을 수 없습니다.");
+    NOT_FOUND_RECORD(408,"RECORD001","해당 직관기록을 찾을 수 없습니다."),
+    RECORD_NOT_OWNED(409, "RECORD002", "본인이 작성한 기록만 삭제할 수 있습니다.");
+
 
 
 

@@ -5,6 +5,7 @@ import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.request.MatchResultRequest;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
+import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.service.MatchRecordService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -55,5 +56,28 @@ public class MatchRecordController {
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("경기 결과 입력 성공", HttpStatus.OK.value(), null));
     }
+
+    @DeleteMapping("/{recordId}")
+    @Operation(summary = "직관 기록 삭제", description = "직관 기록 작성자 본인만 삭제 가능")
+    public ResponseEntity<BasicResponse<Void>> deleteRecord(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("recordId") Long recordId) {
+
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        MatchRecord record = matchRecordService.findById(recordId);
+
+        if (!record.getUser().getUserId().equals(userDetails.getUser().getUserId())) {
+            throw new CustomException(ErrorCode.RECORD_NOT_OWNED);
+        }
+
+        matchRecordService.deleteRecord(recordId);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 삭제 성공", HttpStatus.OK.value(), null));
+    }
+
+
 
 }
