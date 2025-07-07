@@ -57,6 +57,24 @@ public class MatchRecordController {
         return ResponseEntity.ok(BasicResponse.ofSuccess("경기 결과 입력 성공", HttpStatus.OK.value(), null));
     }
 
+    @GetMapping("/{recordId}")
+    @Operation(summary = "직관 기록 상세 조회", description = "특정 직관 기록 상세 정보 조회")
+    public ResponseEntity<BasicResponse<MatchRecordResponse>> getRecordDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("recordId") Long recordId) {
+
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        MatchRecordResponse response = matchRecordService.getRecordDetail(recordId, userDetails.getUser());
+
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("직관 기록 상세 조회 성공", HttpStatus.OK.value(), response));
+    }
+
+
+
     @DeleteMapping("/{recordId}")
     @Operation(summary = "직관 기록 삭제", description = "직관 기록 작성자 본인만 삭제 가능")
     public ResponseEntity<BasicResponse<Void>> deleteRecord(
@@ -70,7 +88,7 @@ public class MatchRecordController {
         MatchRecord record = matchRecordService.findById(recordId);
 
         if (!record.getUser().getUserId().equals(userDetails.getUser().getUserId())) {
-            throw new CustomException(ErrorCode.RECORD_NOT_OWNED);
+            throw new CustomException(ErrorCode.RECORD_NOT_OWNED_DELETE);
         }
 
         matchRecordService.deleteRecord(recordId);

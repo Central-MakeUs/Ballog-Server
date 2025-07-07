@@ -82,6 +82,32 @@ public class MatchRecordService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public MatchRecordResponse getRecordDetail(Long recordId, User currentUser) {
+        MatchRecord record = matchRecordRepository.findById(recordId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
+
+        if (!record.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new CustomException(ErrorCode.RECORD_NOT_OWNED);
+        }
+
+        Matches match = record.getMatches();
+
+        return MatchRecordResponse.builder()
+                .matchRecordId(record.getMatchrecordId())
+                .matchesId(match.getMatchesId())
+                .homeTeam(match.getHomeTeam().name())
+                .awayTeam(match.getAwayTeam().name())
+                .matchDate(match.getMatchesDate().toString())
+                .matchTime(match.getMatchesTime().toString())
+                .userId(record.getUser().getUserId())
+                .watchCnt(record.getWatchCnt())
+                .result(record.getResult())
+                .baseballTeam(record.getBaseballTeam())
+                .build();
+    }
+
+
 
     @Transactional(readOnly = true)
     public MatchRecord findById(Long recordId) {
