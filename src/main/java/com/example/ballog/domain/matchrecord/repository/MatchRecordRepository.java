@@ -11,4 +11,5 @@ import java.util.List;
 public interface MatchRecordRepository extends JpaRepository<MatchRecord, Long> {
     long countByUser(User user);
     List<MatchRecord> findAllByResultIsNull();
+    List<MatchRecord> findAllByUserOrderByMatchrecordIdDesc(User user);
 }
