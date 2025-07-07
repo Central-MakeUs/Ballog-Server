@@ -7,6 +7,7 @@ import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
+import com.example.ballog.domain.matchrecord.entity.Result;
 import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -49,6 +50,15 @@ public class MatchRecordService {
                 .baseballTeam(record.getBaseballTeam())
                 .build();
     }
+
+    @Transactional
+    public void updateResult(Long recordId, Result result) {
+        MatchRecord matchRecord = matchRecordRepository.findById(recordId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
+
+        matchRecord.setResult(result);
+    }
+
 
 
 
