@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -107,6 +108,26 @@ public class MatchRecordService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<MatchRecordResponse> getAllRecordsByUser(User user) {
+        List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
+
+        return records.stream().map(record -> {
+            Matches match = record.getMatches();
+            return MatchRecordResponse.builder()
+                    .matchRecordId(record.getMatchrecordId())
+                    .matchesId(match.getMatchesId())
+                    .homeTeam(match.getHomeTeam().name())
+                    .awayTeam(match.getAwayTeam().name())
+                    .matchDate(match.getMatchesDate().toString())
+                    .matchTime(match.getMatchesTime().toString())
+                    .userId(record.getUser().getUserId())
+                    .watchCnt(record.getWatchCnt())
+                    .result(record.getResult())
+                    .baseballTeam(record.getBaseballTeam())
+                    .build();
+        }).collect(Collectors.toList());
+    }
 
 
     @Transactional(readOnly = true)

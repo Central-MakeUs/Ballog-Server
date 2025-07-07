@@ -18,6 +18,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/record")
@@ -71,6 +73,20 @@ public class MatchRecordController {
 
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("직관 기록 상세 조회 성공", HttpStatus.OK.value(), response));
+    }
+
+    @GetMapping
+    @Operation(summary = "전체 직관 기록 목록 조회", description = "로그인 사용자 본인의 모든 직관 기록 조회")
+    public ResponseEntity<BasicResponse<List<MatchRecordResponse>>> getAllRecords(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        List<MatchRecordResponse> records = matchRecordService.getAllRecordsByUser(userDetails.getUser());
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("전체 직관 기록 목록 조회 성공", HttpStatus.OK.value(), records));
     }
 
 
