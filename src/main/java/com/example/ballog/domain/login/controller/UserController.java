@@ -11,6 +11,8 @@ import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
+import com.example.ballog.global.common.message.ApiErrorResponse;
+import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -74,6 +76,12 @@ public class UserController {
 
     @PostMapping("/auth/signup")
     @Operation(summary = "회원가입시 추가 정보 저장", description = "추가정보인 응원팀과 닉네임 정보를 저장")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.DUPLICATE_NICKNAME),
+            @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_LENGTH),
+            @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_FORMAT)
+    })
     public ResponseEntity<BasicResponse<String>> completeSignup(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody SignupRequest request) {
@@ -97,6 +105,10 @@ public class UserController {
 
     @PostMapping("/auth/logout")
     @Operation(summary = "로그아웃", description = "카카오 및 로그아웃 API")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.OAUTH_TOKEN_NOT_FOUND)
+    })
     public ResponseEntity<BasicResponse<String>> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
@@ -117,6 +129,12 @@ public class UserController {
 
     @DeleteMapping("/auth/withdraw")
     @Operation(summary = "회원탈퇴", description = "카카오 및 회원탈퇴 API")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.OAUTH_TOKEN_NOT_FOUND),
+            @ApiErrorResponse(ErrorCode.REFRESH_TOKEN_EXPIRED)
+
+    })
     public ResponseEntity<BasicResponse<String>> withdraw(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
@@ -145,6 +163,12 @@ public class UserController {
     //마이페이지 -> 유저정보 수정
     @PatchMapping("/user/mypage")
     @Operation(summary = "회원정보수정", description = "마이페이지에서 회원 정보 수정처리 - 응원팀&닉네임")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.DUPLICATE_NICKNAME),
+            @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_LENGTH),
+            @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_FORMAT)
+    })
     public ResponseEntity<BasicResponse<String>> updateUser(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody UpdateUserRequest request) {
@@ -163,6 +187,9 @@ public class UserController {
 
     @GetMapping("/user/mypage")
     @Operation(summary = "회원정보 조회", description = "마이페이지 -> 회원 정보 조회")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
+    })
     public ResponseEntity<BasicResponse<UserInfoResponse>> getUserInfo(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
