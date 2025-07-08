@@ -1,6 +1,8 @@
 package com.example.ballog.domain.emotion.controller;
 
+import com.example.ballog.domain.emotion.dto.request.EmotionEnrollRequest;
 import com.example.ballog.domain.emotion.dto.request.EmotionRequest;
+import com.example.ballog.domain.emotion.dto.response.EmotionEnrollResponse;
 import com.example.ballog.domain.emotion.dto.response.EmotionResponse;
 import com.example.ballog.domain.emotion.service.EmotionService;
 import com.example.ballog.domain.login.security.CustomUserDetails;
@@ -35,15 +37,15 @@ public class EmotionController {
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
             @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
     })
-    public ResponseEntity<BasicResponse<EmotionResponse>> createEmotion(
+    public ResponseEntity<BasicResponse<EmotionEnrollResponse>> createEmotion(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody EmotionRequest request) {
+            @RequestBody EmotionEnrollRequest request) {
 
         if (userDetails == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        EmotionResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
+        EmotionEnrollResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BasicResponse.ofSuccess("감정 표현 등록 성공", HttpStatus.OK.value(), response));
