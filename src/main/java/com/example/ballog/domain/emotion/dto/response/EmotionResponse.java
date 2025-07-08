@@ -1,5 +1,6 @@
 package com.example.ballog.domain.emotion.dto.response;
 
+import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Stadium;
 import lombok.Builder;
@@ -19,4 +20,6 @@ public class EmotionResponse {
 
     private double positivePercent;
     private double negativePercent;
+
+    private EmotionType recentEmotion;
 }

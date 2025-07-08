@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -77,6 +78,11 @@ public class EmotionService {
         long total = positive + negative;
         if (total == 0) total = 1;
 
+        EmotionType recentEmotion = emotions.stream()
+                .max(Comparator.comparing(Emotion::getCreatedAt))
+                .map(Emotion::getEmotionType)
+                .orElse(null);
+
         return EmotionResponse.builder()
                 .matchesDate(matches.getMatchesDate())
                 .matchesTime(matches.getMatchesTime())
@@ -85,6 +91,7 @@ public class EmotionService {
                 .stadium(matches.getStadium())
                 .positivePercent((positive * 100.0) / total)
                 .negativePercent((negative * 100.0) / total)
+                .recentEmotion(recentEmotion)
                 .build();
     }
 
