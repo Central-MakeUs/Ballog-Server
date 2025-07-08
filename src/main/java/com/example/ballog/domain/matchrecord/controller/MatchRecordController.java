@@ -33,8 +33,8 @@ public class MatchRecordController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchRecordRequest request) {
 
-        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         MatchRecordResponse response = matchRecordService.createRecord(request, userDetails.getUser());
@@ -50,8 +50,8 @@ public class MatchRecordController {
             @PathVariable("recordId") Long recordId,
             @RequestBody MatchResultRequest request) {
 
-        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         matchRecordService.updateResult(recordId, request.getResult());
@@ -66,7 +66,7 @@ public class MatchRecordController {
             @PathVariable("recordId") Long recordId) {
 
         if (userDetails == null) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         MatchRecordResponse response = matchRecordService.getRecordDetail(recordId, userDetails.getUser());
@@ -81,7 +81,7 @@ public class MatchRecordController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         if (userDetails == null) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         List<MatchRecordResponse> records = matchRecordService.getAllRecordsByUser(userDetails.getUser());
@@ -98,7 +98,7 @@ public class MatchRecordController {
             @PathVariable("recordId") Long recordId) {
 
         if (userDetails == null) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         MatchRecord record = matchRecordService.findById(recordId);
