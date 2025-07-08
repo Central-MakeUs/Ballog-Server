@@ -8,6 +8,8 @@ import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
+import com.example.ballog.global.common.message.ApiErrorResponse;
+import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,11 +32,19 @@ public class MatchesController {
 
     @PostMapping
     @Operation(summary = "경기일정 등록", description = "관리자만이 경기일정을 등록 가능")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.ACCESS_DENIED),
+    })
     public ResponseEntity<BasicResponse<MatchesResponse>> createMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchesRequest request) {
 
-        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (userDetails.getUser().getRole() != Role.ADMIN) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
@@ -64,6 +74,9 @@ public class MatchesController {
 
     @GetMapping("/{matchId}")
     @Operation(summary = "경기 일정 상세 조회", description = "특정 경기의 상세 정보를 조회")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+    })
     public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId")  Long matchId) {
         MatchesResponse response = matchesService.getMatchDetail(matchId);
         return ResponseEntity.ok(
@@ -73,12 +86,21 @@ public class MatchesController {
 
     @PatchMapping("{matchId}")
     @Operation(summary = "경기일정 수정", description = "관리자만이 경기일정을 수정")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.ACCESS_DENIED),
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+    })
     public ResponseEntity<BasicResponse<MatchesResponse>> updateMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("matchId") Long matchId,
             @RequestBody MatchesRequest request) {
 
-        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (userDetails.getUser().getRole() != Role.ADMIN) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
@@ -91,11 +113,20 @@ public class MatchesController {
 
     @DeleteMapping("{matchId}")
     @Operation(summary = "경기일정 삭제", description = "관리자만이 경기일정을 삭제")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.ACCESS_DENIED),
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+    })
     public ResponseEntity<BasicResponse<String>> deleteMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("matchId")  Long matchId) {
 
-        if (userDetails == null || userDetails.getUser().getRole() != Role.ADMIN) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (userDetails.getUser().getRole() != Role.ADMIN) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
@@ -105,9 +136,5 @@ public class MatchesController {
                 BasicResponse.ofSuccess("경기일정 삭제 성공")
         );
     }
-
-
-
-
 
 }
