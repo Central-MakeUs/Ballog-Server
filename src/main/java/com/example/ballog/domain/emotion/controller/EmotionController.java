@@ -17,10 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -50,6 +47,27 @@ public class EmotionController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BasicResponse.ofSuccess("감정 표현 등록 성공", HttpStatus.OK.value(), response));
     }
+
+    @GetMapping("/{recordId}")
+    @Operation(summary = "감정표현 홈", description = "감정표현 홈 - 직관 기록에 대해 POSITIVE, NEGATIVE 감정 비율 조회 페이지")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
+            @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
+    })
+    public ResponseEntity<BasicResponse<EmotionResponse>> getEmotionRatio(
+            @PathVariable("recordId") Long recordId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        EmotionResponse response = emotionService.getEmotionRatio(recordId, userDetails.getUser().getUserId());
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("감정 비율 조회 성공", HttpStatus.OK.value(), response));
+    }
+
 
 
 }
