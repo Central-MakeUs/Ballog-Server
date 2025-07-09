@@ -111,8 +111,6 @@ public class MatchRecordController {
     }
 
 
-
-
     @DeleteMapping("/{recordId}")
     @Operation(summary = "직관 기록 삭제", description = "직관 기록 작성자 본인만 삭제 가능")
     @ApiErrorResponses({

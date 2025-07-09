@@ -12,7 +12,7 @@ import java.util.List;
 public class MatchRecordListResponse {
     private int totalCount;
     private double winRate;
-    private double positiveEmotionPercent;
-    private double negativeEmotionPercent;
-    private List<MatchRecordResponse> records;
+    private double totalPositiveEmotionPercent;
+    private double totalNegativeEmotionPercent;
+    private List<MatchRecordSummaryResponse> records;
 }

@@ -9,6 +9,7 @@ import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
+import com.example.ballog.domain.matchrecord.dto.response.MatchRecordSummaryResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.entity.Result;
 import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
@@ -101,6 +102,18 @@ public class MatchRecordService {
 
         Matches match = record.getMatches();
 
+        List<Emotion> emotions = emotionRepository.findByMatchRecordId(recordId);
+        long totalCount = emotions.size();
+        long positiveCount = emotions.stream()
+                .filter(e -> e.getEmotionType() == EmotionType.POSITIVE)
+                .count();
+        long negativeCount = emotions.stream()
+                .filter(e -> e.getEmotionType() == EmotionType.NEGATIVE)
+                .count();
+
+        double positivePercent = totalCount == 0 ? 0.0 : (positiveCount * 100.0) / totalCount;
+        double negativePercent = totalCount == 0 ? 0.0 : (negativeCount * 100.0) / totalCount;
+
         return MatchRecordResponse.builder()
                 .matchRecordId(record.getMatchrecordId())
                 .matchesId(match.getMatchesId())
@@ -112,17 +125,20 @@ public class MatchRecordService {
                 .watchCnt(record.getWatchCnt())
                 .result(record.getResult())
                 .baseballTeam(record.getBaseballTeam())
+                .positiveEmotionPercent(positivePercent)
+                .negativeEmotionPercent(negativePercent)
                 .build();
     }
+
 
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
         int totalCount = records.size();
 
-        List<MatchRecordResponse> recordResponses = records.stream().map(record -> {
+        List<MatchRecordSummaryResponse> recordResponses = records.stream().map(record -> {
             Matches match = record.getMatches();
-            return MatchRecordResponse.builder()
+            return MatchRecordSummaryResponse.builder()
                     .matchRecordId(record.getMatchrecordId())
                     .matchesId(match.getMatchesId())
                     .homeTeam(match.getHomeTeam().name())
@@ -159,12 +175,11 @@ public class MatchRecordService {
         return MatchRecordListResponse.builder()
                 .totalCount(totalCount)
                 .winRate(winRate)
-                .positiveEmotionPercent(positiveEmotionPercent)
-                .negativeEmotionPercent(negativeEmotionPercent)
+                .totalPositiveEmotionPercent(positiveEmotionPercent)
+                .totalNegativeEmotionPercent(negativeEmotionPercent)
                 .records(recordResponses)
                 .build();
     }
-
 
 
     @Transactional(readOnly = true)
