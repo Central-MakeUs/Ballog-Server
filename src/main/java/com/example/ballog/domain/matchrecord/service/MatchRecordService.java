@@ -1,9 +1,13 @@
 package com.example.ballog.domain.matchrecord.service;
 
+import com.example.ballog.domain.emotion.entity.Emotion;
+import com.example.ballog.domain.emotion.entity.EmotionType;
+import com.example.ballog.domain.emotion.repository.EmotionRepository;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
+import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.entity.Result;
@@ -16,7 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +30,7 @@ import java.util.stream.Collectors;
 public class MatchRecordService {
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
+    private final EmotionRepository emotionRepository;
 
     @Transactional
     public MatchRecordResponse createRecord(MatchRecordRequest request, User user) {
@@ -109,10 +116,11 @@ public class MatchRecordService {
     }
 
     @Transactional(readOnly = true)
-    public List<MatchRecordResponse> getAllRecordsByUser(User user) {
+    public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
+        int totalCount = records.size();
 
-        return records.stream().map(record -> {
+        List<MatchRecordResponse> recordResponses = records.stream().map(record -> {
             Matches match = record.getMatches();
             return MatchRecordResponse.builder()
                     .matchRecordId(record.getMatchrecordId())
@@ -127,7 +135,36 @@ public class MatchRecordService {
                     .baseballTeam(record.getBaseballTeam())
                     .build();
         }).collect(Collectors.toList());
+
+
+        long winCount = records.stream()
+                .filter(r -> r.getResult() == Result.WIN)
+                .count();
+        double winRate = totalCount == 0 ? 0.0 : (winCount * 100.0) / totalCount;
+
+        List<Emotion> allEmotions = emotionRepository.findByUserId(user.getUserId());
+        long totalEmotionCount = allEmotions.size();
+
+        long positiveCount = allEmotions.stream()
+                .filter(e -> e.getEmotionType() == EmotionType.POSITIVE)
+                .count();
+
+        long negativeCount = allEmotions.stream()
+                .filter(e -> e.getEmotionType() == EmotionType.NEGATIVE)
+                .count();
+
+        double positiveEmotionPercent = totalEmotionCount == 0 ? 0.0 : (positiveCount * 100.0) / totalEmotionCount;
+        double negativeEmotionPercent = totalEmotionCount == 0 ? 0.0 : (negativeCount * 100.0) / totalEmotionCount;
+
+        return MatchRecordListResponse.builder()
+                .totalCount(totalCount)
+                .winRate(winRate)
+                .positiveEmotionPercent(positiveEmotionPercent)
+                .negativeEmotionPercent(negativeEmotionPercent)
+                .records(recordResponses)
+                .build();
     }
+
 
 
     @Transactional(readOnly = true)

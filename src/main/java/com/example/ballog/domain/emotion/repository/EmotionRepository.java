@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     List<Emotion> findByMatchRecord(MatchRecord matchRecord);
+    List<Emotion> findByUserId(Long userId);
 }

@@ -19,4 +19,5 @@ public class MatchRecordResponse {
     private Long watchCnt;
     private Result result;
     private BaseballTeam baseballTeam;
+
 }
