@@ -4,6 +4,7 @@ import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.request.MatchResultRequest;
+import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.service.MatchRecordService;
@@ -91,24 +92,23 @@ public class MatchRecordController {
     }
 
     @GetMapping
-    @Operation(summary = "전체 직관 기록 목록 조회", description = "로그인 사용자 본인의 모든 직관 기록 조회")
+    @Operation(summary = "전체 직관 기록 목록 조회", description = "로그인 사용자 본인의 모든 직관 기록 조회(= 직관로그 페이지)")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
             @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
     })
-    public ResponseEntity<BasicResponse<List<MatchRecordResponse>>> getAllRecords(
+    public ResponseEntity<BasicResponse<MatchRecordListResponse>> getAllRecords(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         if (userDetails == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        List<MatchRecordResponse> records = matchRecordService.getAllRecordsByUser(userDetails.getUser());
+        MatchRecordListResponse response = matchRecordService.getAllRecordsByUser(userDetails.getUser());
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("전체 직관 기록 목록 조회 성공", HttpStatus.OK.value(), records));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("전체 직관 기록 목록 조회 성공", HttpStatus.OK.value(), response));
     }
-
 
 
     @DeleteMapping("/{recordId}")
