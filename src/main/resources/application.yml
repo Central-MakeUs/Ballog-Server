@@ -42,6 +42,19 @@ kakao:
 jwt:
   secret-key: ${JWT_SECRET_KEY}
 
+cloud:
+  aws:
+    s3:
+      bucket: ballog-bucket
+    credentials:
+      access-key: ${S3ACCESSKEY}
+      secret-key: ${S3SECRETKEY}
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+
 logging:
   level:
     org.springframework.security: DEBUG
