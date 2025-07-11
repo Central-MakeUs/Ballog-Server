@@ -2,8 +2,6 @@ package com.example.ballog.global.common.exception.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,6 +37,7 @@ public enum ErrorCode {
     //MATCH_RECORD
     NOT_FOUND_RECORD(408,"RECORD001","해당 직관기록을 찾을 수 없습니다."),
     RECORD_NOT_OWNED_DELETE(409, "RECORD002", "본인이 작성한 기록만 삭제 할 수 있습니다."),
+
     RECORD_NOT_OWNED(409, "RECORD003", "본인이 작성한 기록만 접근할 수 있습니다."),
 
     //IMAGE
@@ -46,10 +45,6 @@ public enum ErrorCode {
     INVALID_FILE_EXTENSION(411,"FILE_001", "유효하지 않은 파일 형식입니다."),
     UNSUPPORTED_FILE_EXTENSION(411,"FILE_002", "지원하지 않는 파일 확장자입니다."),
     INVALID_URL(412, "URL001", "유효하지 않은 URL입니다.");
-
-
-
-
 
 
     private int status;
