@@ -35,7 +35,7 @@ public class ImageController {
     }
 
     @PostMapping
-    @Operation(summary = "이미지 저장", description = "S3에 업로드된 이미지 정보를 DB에 저장")
+    @Operation(summary = "이미지 저장", description = "S3에 업로드된 이미지 정보를 DB에 저장하는 API")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD)
