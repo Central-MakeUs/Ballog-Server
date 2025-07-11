@@ -5,9 +5,11 @@ import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     List<Emotion> findByMatchRecord(MatchRecord matchRecord);
     @Query("SELECT e FROM Emotion e WHERE e.matchRecord.matchrecordId = :recordId")
