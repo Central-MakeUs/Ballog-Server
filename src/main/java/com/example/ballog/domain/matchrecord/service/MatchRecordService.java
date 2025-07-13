@@ -16,14 +16,13 @@ import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +31,8 @@ public class MatchRecordService {
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final EmotionRepository emotionRepository;
+    @Value("${app.default-image-url}")
+    private String defaultImageUrl;
 
     @Transactional
     public MatchRecordResponse createRecord(MatchRecordRequest request, User user) {
@@ -45,9 +46,10 @@ public class MatchRecordService {
         record.setUser(user);
         record.setWatchCnt(cnt+1);
         record.setResult(request.getResult());
-
         record.setBaseballTeam(user.getBaseballTeam());
+        record.setDefaultImageUrl(defaultImageUrl);
         matchRecordRepository.save(record);
+
 
         return MatchRecordResponse.builder()
                 .matchRecordId(record.getMatchrecordId())
@@ -60,6 +62,7 @@ public class MatchRecordService {
                 .watchCnt(record.getWatchCnt())
                 .result(record.getResult())
                 .baseballTeam(record.getBaseballTeam())
+                .defaultImageUrl(record.getDefaultImageUrl())
                 .build();
     }
 

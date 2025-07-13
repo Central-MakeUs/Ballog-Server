@@ -23,4 +23,6 @@ public class MatchRecordResponse {
     private double positiveEmotionPercent;
     private double negativeEmotionPercent;
 
+    private String defaultImageUrl;
+
 }
