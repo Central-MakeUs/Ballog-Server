@@ -25,7 +25,6 @@ public class EmotionService {
 
     private final EmotionRepository emotionRepository;
     private final MatchRecordRepository matchRecordRepository;
-
     public EmotionEnrollResponse createEmotion(EmotionEnrollRequest request, Long currentUserId) {
 
         MatchRecord matchRecord = matchRecordRepository.findById(request.getRecordId())
@@ -92,6 +91,7 @@ public class EmotionService {
                 .positivePercent((positive * 100.0) / total)
                 .negativePercent((negative * 100.0) / total)
                 .recentEmotion(recentEmotion)
+                .defaultImageUrl(record.getDefaultImageUrl())
                 .build();
     }
 
