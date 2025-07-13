@@ -22,4 +22,6 @@ public class EmotionResponse {
     private double negativePercent;
 
     private EmotionType recentEmotion;
+
+    private String defaultImageUrl;
 }

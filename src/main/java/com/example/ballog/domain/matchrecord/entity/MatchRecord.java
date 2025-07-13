@@ -38,4 +38,7 @@ public class MatchRecord {
 
     @Column(nullable = false)
     private boolean autoProcessed = false;
+
+    @Column(nullable = false)
+    private String defaultImageUrl;
 }

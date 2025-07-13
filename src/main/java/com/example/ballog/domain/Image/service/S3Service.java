@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -43,8 +42,7 @@ public class S3Service {
 
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, s3Key)
                 .withMethod(com.amazonaws.HttpMethod.PUT)
-                .withExpiration(expiration)
-                .withContentType(mimeType);
+                .withExpiration(expiration);
 
         URL url = amazonS3.generatePresignedUrl(generatePresignedUrlRequest);
 
@@ -79,7 +77,7 @@ public class S3Service {
         return url.substring(url.lastIndexOf('/') + 1);
     }
     public String getAccessibleUrl(String fileName) {
-        return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + fileName;
+        return "https://" + bucket + ".s3." + region + ".amazonaws.com/images/" + fileName;
     }
 }
 

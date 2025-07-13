@@ -55,6 +55,9 @@ cloud:
     stack:
       auto: false
 
+app:
+  default-image-url: ${DEFAULT_IMAGE}
+
 logging:
   level:
     org.springframework.security: DEBUG

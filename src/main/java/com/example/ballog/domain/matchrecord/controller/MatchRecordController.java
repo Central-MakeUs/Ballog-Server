@@ -4,6 +4,7 @@ import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.request.MatchResultRequest;
+import com.example.ballog.domain.matchrecord.dto.response.MatchRecordDetailResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
@@ -77,7 +78,7 @@ public class MatchRecordController {
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
             @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
     })
-    public ResponseEntity<BasicResponse<MatchRecordResponse>> getRecordDetail(
+    public ResponseEntity<BasicResponse<MatchRecordDetailResponse>> getRecordDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("recordId") Long recordId) {
 
@@ -85,7 +86,7 @@ public class MatchRecordController {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        MatchRecordResponse response = matchRecordService.getRecordDetail(recordId, userDetails.getUser());
+        MatchRecordDetailResponse response = matchRecordService.getRecordDetail(recordId, userDetails.getUser());
 
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("직관 기록 상세 조회 성공", HttpStatus.OK.value(), response));
