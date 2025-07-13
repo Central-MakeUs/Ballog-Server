@@ -1,5 +1,6 @@
 package com.example.ballog.domain.matchrecord.service;
 
+import com.example.ballog.domain.Image.respository.ImageRepository;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
@@ -7,6 +8,7 @@ import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
+import com.example.ballog.domain.matchrecord.dto.response.MatchRecordDetailResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordSummaryResponse;
@@ -31,6 +33,7 @@ public class MatchRecordService {
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final EmotionRepository emotionRepository;
+    private final ImageRepository imageRepository;
     @Value("${app.default-image-url}")
     private String defaultImageUrl;
 
@@ -95,7 +98,7 @@ public class MatchRecordService {
     }
 
     @Transactional(readOnly = true)
-    public MatchRecordResponse getRecordDetail(Long recordId, User currentUser) {
+    public MatchRecordDetailResponse getRecordDetail(Long recordId, User currentUser) {
         MatchRecord record = matchRecordRepository.findById(recordId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
@@ -104,6 +107,14 @@ public class MatchRecordService {
         }
 
         Matches match = record.getMatches();
+
+        List<MatchRecordDetailResponse.ImageInfo> imageList = imageRepository.findByMatchRecord(record).stream()
+                .map(img -> MatchRecordDetailResponse.ImageInfo.builder()
+                        .imageUrl(img.getImageUrl())
+                        .createdAt(img.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
 
         List<Emotion> emotions = emotionRepository.findByMatchRecordId(recordId);
         long totalCount = emotions.size();
@@ -117,7 +128,7 @@ public class MatchRecordService {
         double positivePercent = totalCount == 0 ? 0.0 : (positiveCount * 100.0) / totalCount;
         double negativePercent = totalCount == 0 ? 0.0 : (negativeCount * 100.0) / totalCount;
 
-        return MatchRecordResponse.builder()
+        return MatchRecordDetailResponse.builder()
                 .matchRecordId(record.getMatchrecordId())
                 .matchesId(match.getMatchesId())
                 .homeTeam(match.getHomeTeam().name())
@@ -130,6 +141,7 @@ public class MatchRecordService {
                 .baseballTeam(record.getBaseballTeam())
                 .positiveEmotionPercent(positivePercent)
                 .negativeEmotionPercent(negativePercent)
+                .imageList(imageList)
                 .build();
     }
 
