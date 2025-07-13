@@ -9,7 +9,9 @@ import com.example.ballog.domain.Image.respository.ImageRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +22,10 @@ public class ImageService {
     private final MatchRecordRepository matchRecordRepository;
     private final S3Service s3Service;
 
+    @Value("${app.default-image-url}")
+    private String defaultImageUrl;
+
+    @Transactional
     public Image saveImage(ImageSaveRequest request, Long userId) {
         MatchRecord matchRecord = matchRecordRepository.findById(request.getRecordId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
@@ -35,7 +41,20 @@ public class ImageService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return imageRepository.save(image);
+        imageRepository.save(image);
+
+        if (matchRecord.getDefaultImageUrl().equals(defaultImageUrl)) {
+            String firstImageUrl = imageRepository
+                    .findFirstByMatchRecordOrderByCreatedAtAsc(matchRecord)
+                    .map(Image::getImageUrl)
+                    .orElse(null);
+
+            if (firstImageUrl != null) {
+                matchRecord.setDefaultImageUrl(firstImageUrl);
+            }
+        }
+
+        return image;
     }
 
     public ImageSaveResponse toImageSaveResponse(Image image) {

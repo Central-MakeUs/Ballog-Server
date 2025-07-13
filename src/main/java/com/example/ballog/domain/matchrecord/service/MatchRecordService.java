@@ -134,6 +134,8 @@ public class MatchRecordService {
     }
 
 
+
+
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
