@@ -25,11 +25,11 @@ public class EmotionService {
 
     private final EmotionRepository emotionRepository;
     private final MatchRecordRepository matchRecordRepository;
-    public EmotionEnrollResponse createEmotion(EmotionEnrollRequest request, Long currentUserId) {
+
+    public EmotionResponse createEmotion(EmotionEnrollRequest request, Long currentUserId) {
 
         MatchRecord matchRecord = matchRecordRepository.findById(request.getRecordId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
-
 
         if (!matchRecord.getUser().getUserId().equals(currentUserId)) {
             throw new CustomException(ErrorCode.RECORD_NOT_OWNED);
@@ -44,14 +44,10 @@ public class EmotionService {
         emotion.setEmotionType(request.getEmotionType());
         emotion.setCreatedAt(LocalDateTime.now());
 
-        Emotion saved = emotionRepository.save(emotion);
-        return EmotionEnrollResponse.builder()
-                .emotionId(saved.getEmotionId())
-                .emotionType(saved.getEmotionType())
-                .createdAt(saved.getCreatedAt())
-                .recordId(saved.getMatchRecord().getMatchrecordId())
-                .build();
+        emotionRepository.save(emotion);
+        return getEmotionRatio(request.getRecordId(), currentUserId);
     }
+
 
 
     public EmotionResponse getEmotionRatio(Long recordId, Long currentUserId) {
@@ -94,6 +90,5 @@ public class EmotionService {
                 .defaultImageUrl(record.getDefaultImageUrl())
                 .build();
     }
-
 
 }
