@@ -30,12 +30,14 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MatchRecordService {
+
+    @Value("${app.default-image-url}")
+    private String defaultImageUrl;
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
     private final EmotionRepository emotionRepository;
     private final ImageRepository imageRepository;
-    @Value("${app.default-image-url}")
-    private String defaultImageUrl;
+
 
     @Transactional
     public MatchRecordResponse createRecord(MatchRecordRequest request, User user) {
@@ -77,25 +79,6 @@ public class MatchRecordService {
         matchRecord.setResult(result);
     }
 
-    @Scheduled(fixedDelay = 60 * 60 * 1000)
-    @Transactional
-    public void autoUnfinishedRecords() {
-        LocalDateTime now = LocalDateTime.now();
-
-        List<MatchRecord> pendingRecords = matchRecordRepository.findAllByResultIsNull();
-
-        for (MatchRecord record : pendingRecords) {
-            Matches match = record.getMatches();
-            LocalDateTime matchDateTime = LocalDateTime.of(
-                    match.getMatchesDate(),
-                    match.getMatchesTime()
-            );
-
-            if (matchDateTime.plusHours(8).isBefore(now)) {
-                record.setResult(Result.SKIP);
-            }
-        }
-    }
 
     @Transactional(readOnly = true)
     public MatchRecordDetailResponse getRecordDetail(Long recordId, User currentUser) {
@@ -144,9 +127,6 @@ public class MatchRecordService {
                 .imageList(imageList)
                 .build();
     }
-
-
-
 
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {

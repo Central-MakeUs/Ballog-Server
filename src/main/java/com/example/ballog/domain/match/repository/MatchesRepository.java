@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface MatchesRepository extends JpaRepository<Matches, Long> {
     List<Matches> findAllByMatchesDate(LocalDate date);
+
 }
