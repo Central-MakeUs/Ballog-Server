@@ -1,7 +1,6 @@
 package com.example.ballog.domain.emotion.controller;
 
 import com.example.ballog.domain.emotion.dto.request.EmotionEnrollRequest;
-import com.example.ballog.domain.emotion.dto.response.EmotionEnrollResponse;
 import com.example.ballog.domain.emotion.dto.response.EmotionResponse;
 import com.example.ballog.domain.emotion.service.EmotionService;
 import com.example.ballog.domain.login.security.CustomUserDetails;
@@ -33,7 +32,7 @@ public class EmotionController {
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
             @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
     })
-    public ResponseEntity<BasicResponse<EmotionEnrollResponse>> createEmotion(
+    public ResponseEntity<BasicResponse<EmotionResponse>> createEmotion(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EmotionEnrollRequest request) {
 
@@ -41,11 +40,12 @@ public class EmotionController {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        EmotionEnrollResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
+        EmotionResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BasicResponse.ofSuccess("감정 표현 등록 성공", HttpStatus.OK.value(), response));
     }
+
 
     @GetMapping("/{recordId}")
     @Operation(summary = "감정표현 홈", description = "감정표현 홈 - 직관 기록에 대해 POSITIVE, NEGATIVE 감정 비율 조회 페이지")
