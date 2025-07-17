@@ -33,7 +33,6 @@ import org.springframework.http.MediaType;
 @Tag(name = "Authentication", description = "Authentication API")
 public class UserController {
     private final UserService userService;
-    private final TokenService tokenService;
     private final OAuthTokenService oAuthTokenService;
 
     @Value("${kakao.admin-key}")
@@ -100,7 +99,7 @@ public class UserController {
 
         userService.updateUser(user);
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입이 완료되었습니다."));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입 완료"));
     }
 
     @PostMapping("/auth/logout")

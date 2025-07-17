@@ -1,7 +1,6 @@
 package com.example.ballog.domain.emotion.controller;
 
 import com.example.ballog.domain.emotion.dto.request.EmotionEnrollRequest;
-import com.example.ballog.domain.emotion.dto.response.EmotionEnrollResponse;
 import com.example.ballog.domain.emotion.dto.response.EmotionResponse;
 import com.example.ballog.domain.emotion.service.EmotionService;
 import com.example.ballog.domain.login.security.CustomUserDetails;

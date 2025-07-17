@@ -22,7 +22,7 @@ public enum ErrorCode {
     //USER
     ALREADY_EXIST_USER(403, "USER001", "이미 존재하는 사용자입니다."),
     INVALID_USER(404, "USER002", "존재하지 않는 사용자입니다."),
-    DUPLICATE_NICKNAME(405, "USER003", "이미 존재하는 닉네임입니다."),
+    DUPLICATE_NICKNAME(409, "USER003", "이미 존재하는 닉네임입니다."),
 
     // 닉네임 관련
     INVALID_NICKNAME_LENGTH(407, "USER003", "닉네임은 1자 이상 10자 이하이어야 합니다."),

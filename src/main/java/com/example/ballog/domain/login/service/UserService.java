@@ -130,7 +130,7 @@ public class UserService {
         }
 
         if (request.getBaseballTeam() != null) {
-            user.setBaseballTeam(BaseballTeam.valueOf(request.getBaseballTeam()));
+            user.setBaseballTeam(request.getBaseballTeam());
         }
     }
 
