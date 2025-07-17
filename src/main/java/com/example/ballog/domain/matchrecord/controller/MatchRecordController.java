@@ -1,6 +1,5 @@
 package com.example.ballog.domain.matchrecord.controller;
 
-import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
 import com.example.ballog.domain.matchrecord.dto.request.MatchResultRequest;
@@ -21,8 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor

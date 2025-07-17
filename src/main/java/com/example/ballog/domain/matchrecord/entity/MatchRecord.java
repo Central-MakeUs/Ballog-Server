@@ -37,8 +37,5 @@ public class MatchRecord {
     private BaseballTeam baseballTeam;
 
     @Column(nullable = false)
-    private boolean autoProcessed = false;
-
-    @Column(nullable = false)
     private String defaultImageUrl;
 }

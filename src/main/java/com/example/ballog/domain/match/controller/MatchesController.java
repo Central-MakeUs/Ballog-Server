@@ -89,7 +89,8 @@ public class MatchesController {
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.ACCESS_DENIED),
-            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND),
+            @ApiErrorResponse(ErrorCode.MATCH_RESULT_FORMAT_INVALID)
     })
     public ResponseEntity<BasicResponse<MatchesResponse>> updateMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
