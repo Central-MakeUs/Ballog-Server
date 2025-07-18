@@ -26,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class OAuthTokenService {
     private final OAuthTokenRepository oAuthTokenRepository;
-
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenService tokenService;
@@ -200,11 +199,20 @@ public class OAuthTokenService {
         }
     }
 
+    @Transactional
+    public void saveFcmToken(Long userId, String fcmToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
+        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
+                .orElse(new OAuthToken());
 
+        token.setUser(user);
+        token.setProvider("fcm");
+        token.setAccessToken(fcmToken);
+        token.setRefreshToken(null);
 
-
-
-
+        oAuthTokenRepository.save(token);
+    }
 
 }
