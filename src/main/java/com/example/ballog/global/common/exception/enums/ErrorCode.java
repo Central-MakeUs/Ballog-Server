@@ -17,6 +17,7 @@ public enum ErrorCode {
     UNAUTHORIZED(404, "AUTH001", "인증 정보가 없습니다."),
     OAUTH_TOKEN_NOT_FOUND(404, "AUTH002", "KAKAO OAuth 토큰이 존재하지 않습니다."),
     REFRESH_TOKEN_EXPIRED(404,"AUTH003","KAKAO OAuth Refresh 토큰이 만료되었습니다." ),
+    FCM_TOKEN_NOT_FOUND(404,"AUTH004","FCM 토큰값을 찾을 수 없습니다."),
 
 
     //USER
@@ -47,6 +48,9 @@ public enum ErrorCode {
     INVALID_FILE_EXTENSION(411,"FILE_001", "유효하지 않은 파일 형식입니다."),
     UNSUPPORTED_FILE_EXTENSION(411,"FILE_002", "지원하지 않는 파일 확장자입니다."),
     INVALID_URL(412, "URL001", "유효하지 않은 URL입니다."),
+
+    //ALERT
+    ALERT_NOT_FOUND(414, "ALERT_001", "해당 사용자의 알림 설정이 존재하지 않습니다."),
 
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 

@@ -51,6 +51,9 @@ dependencies {
     implementation platform("software.amazon.awssdk:bom:2.25.11")
     implementation 'software.amazon.awssdk:s3'
 
+    implementation 'com.google.firebase:firebase-admin:9.2.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+
 }
 
 

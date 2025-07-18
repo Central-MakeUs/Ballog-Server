@@ -36,3 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 .env
+
+src/main/resources/firebase/service-account.json
+src/main/resources/static

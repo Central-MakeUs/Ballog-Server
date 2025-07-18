@@ -12,5 +12,6 @@ import java.util.Optional;
 public interface OAuthTokenRepository extends JpaRepository<OAuthToken, Long> {
     Optional<OAuthToken> findByUser(User user);
     List<OAuthToken> findAllByUserUserId(Long userId);
+    Optional<OAuthToken> findByUserAndProvider(User user, String provider);
 
 }

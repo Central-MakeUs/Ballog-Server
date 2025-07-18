@@ -1,10 +1,10 @@
 package com.example.ballog.domain.login.service;
 
 
+import com.example.ballog.domain.alert.entity.Alert;
+import com.example.ballog.domain.alert.repository.AlertRepository;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
-import com.example.ballog.domain.login.dto.response.KakaoTokenResponse;
-import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.OAuthTokenRepository;
 import com.example.ballog.domain.login.repository.RefreshTokenRepository;
@@ -33,9 +33,14 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final OAuthTokenRepository oAuthTokenRepository;
     private final TokenService tokenService;
+    private final AlertRepository alertRepository;
 
     public User signup(User user) {
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        Alert alert = new Alert();
+        alert.setUser(savedUser);
+        alertRepository.save(alert);
+        return savedUser;
     }
 
     public User findByEmail(String email) {
@@ -134,5 +139,29 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public void saveFcmToken(Long userId, String fcmToken) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
+        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
+                .orElse(new OAuthToken());
+
+        token.setUser(user);
+        token.setProvider("fcm");
+        token.setAccessToken(fcmToken);
+        token.setRefreshToken(null);
+
+        oAuthTokenRepository.save(token);
+    }
+
+    public String findFcmTokenByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
+
+        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
+                .orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
+
+        return token.getAccessToken();
+    }
 }

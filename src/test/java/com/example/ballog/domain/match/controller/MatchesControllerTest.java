@@ -347,14 +347,4 @@ class MatchesControllerTest {
                 .andExpect(jsonPath("$.error").value("인증 정보가 없습니다."));
     }
 
-
-
-
-
-
-
-
-
-
-
 }
