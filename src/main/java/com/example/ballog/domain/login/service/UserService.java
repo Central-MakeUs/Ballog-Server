@@ -1,6 +1,8 @@
 package com.example.ballog.domain.login.service;
 
 
+import com.example.ballog.domain.alert.entity.Alert;
+import com.example.ballog.domain.alert.repository.AlertRepository;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
 import com.example.ballog.domain.login.dto.response.KakaoTokenResponse;
@@ -33,9 +35,14 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final OAuthTokenRepository oAuthTokenRepository;
     private final TokenService tokenService;
+    private final AlertRepository alertRepository;
 
     public User signup(User user) {
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        Alert alert = new Alert();
+        alert.setUser(savedUser);
+        alertRepository.save(alert);
+        return savedUser;
     }
 
     public User findByEmail(String email) {

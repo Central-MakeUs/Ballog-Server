@@ -23,9 +23,10 @@ public class Alert {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+
     @Column(name = "start_alert", nullable = false)
-    private Boolean startAlert;
+    private Boolean startAlert= false;
 
     @Column(name = "in_game_alert", nullable = false)
-    private Boolean inGameAlert;
+    private Boolean inGameAlert= false;
 }

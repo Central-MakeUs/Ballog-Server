@@ -48,6 +48,9 @@ public enum ErrorCode {
     UNSUPPORTED_FILE_EXTENSION(411,"FILE_002", "지원하지 않는 파일 확장자입니다."),
     INVALID_URL(412, "URL001", "유효하지 않은 URL입니다."),
 
+    //ALERT
+    ALERT_NOT_FOUND(413, "ALERT_001", "해당 사용자의 알림 설정이 존재하지 않습니다."),
+
     INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
 
 

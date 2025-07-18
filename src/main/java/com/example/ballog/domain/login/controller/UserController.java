@@ -160,7 +160,7 @@ public class UserController {
 
 
     //마이페이지 -> 유저정보 수정
-    @PatchMapping("/user/mypage")
+    @PatchMapping("/mypage/user")
     @Operation(summary = "회원정보수정", description = "마이페이지에서 회원 정보 수정처리 - 응원팀&닉네임")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
@@ -184,7 +184,7 @@ public class UserController {
 
 
 
-    @GetMapping("/user/mypage")
+    @GetMapping("/mypage/users")
     @Operation(summary = "회원정보 조회", description = "마이페이지 -> 회원 정보 조회")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
