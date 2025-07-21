@@ -54,6 +54,10 @@ dependencies {
     implementation 'com.google.firebase:firebase-admin:9.2.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
 
+    implementation 'com.github.mwiede:jsch:0.2.16'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
+
+
 }
 
 

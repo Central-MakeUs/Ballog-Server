@@ -1,11 +1,9 @@
 package com.example.ballog.domain.login.service;
 
 import com.example.ballog.domain.login.dto.response.KakaoOAuthTokenResponse;
-import com.example.ballog.domain.login.dto.response.KakaoTokenResponse;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.OAuthTokenRepository;
-import com.example.ballog.domain.login.repository.RefreshTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -27,8 +25,6 @@ import org.springframework.web.client.RestTemplate;
 public class OAuthTokenService {
     private final OAuthTokenRepository oAuthTokenRepository;
     private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final TokenService tokenService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
@@ -46,8 +42,6 @@ public class OAuthTokenService {
     @Value("${spring.security.oauth2.client.registration.kakao.client-secret}")
     private String kakaoClientSecret;
 
-    @Value("${kakao.admin-key}")
-    private String adminKey;
 
     //code로 카카오 토큰 받기
     public KakaoOAuthTokenResponse getFullKakaoTokenResponse(String code) {
