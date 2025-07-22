@@ -6,7 +6,7 @@ services:
     restart: on-failure
     image: chaeyeon01/ballog-server:latest
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       SPRING_DATASOURCE_URL: ${EC2_DATASOURCE_URL}?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
