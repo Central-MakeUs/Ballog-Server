@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   spring-boot-app:
     container_name: ballog-server
@@ -12,4 +14,3 @@ services:
       S3ACCESSKEY: ${S3ACCESSKEY}
       S3SECRETKEY: ${S3SECRETKEY}
       TZ: Asia/Seoul
-      
