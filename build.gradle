@@ -65,6 +65,6 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-bootJar {
+tasks.bootJar {
     mainClass = 'com.example.ballog.BallogApplication'
 }
