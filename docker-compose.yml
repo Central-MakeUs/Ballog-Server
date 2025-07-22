@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   spring-boot-app:
     container_name: ballog-server
