@@ -223,7 +223,7 @@ class UserControllerTest {
 
         doNothing().when(userService).updateUser(anyLong(), any(UpdateUserRequest.class));
 
-        mockMvc.perform(patch("/api/v1/user/mypage")
+        mockMvc.perform(patch("/api/v1/mypage/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -251,7 +251,7 @@ class UserControllerTest {
         doThrow(new CustomException(ErrorCode.INVALID_NICKNAME_FORMAT))
                 .when(userService).updateUser(anyLong(), any(UpdateUserRequest.class));
 
-        mockMvc.perform(patch("/api/v1/user/mypage")
+        mockMvc.perform(patch("/api/v1/mypage/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().is(407))
@@ -277,7 +277,7 @@ class UserControllerTest {
                 new UsernamePasswordAuthenticationToken(userDetails, null)
         );
 
-        mockMvc.perform(get("/api/v1/user/mypage"))
+        mockMvc.perform(get("/api/v1/mypage/user"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.status").value(200))
@@ -294,7 +294,7 @@ class UserControllerTest {
     void getUserInfo_실패() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/v1/user/mypage"))
+        mockMvc.perform(get("/api/v1/mypage/user"))
                 .andExpect(status().is(404))
                 .andExpect(jsonPath("$.message").value("fail"))
                 .andExpect(jsonPath("$.status").value(404))

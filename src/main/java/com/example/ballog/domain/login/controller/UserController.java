@@ -184,7 +184,7 @@ public class UserController {
 
 
 
-    @GetMapping("/mypage/users")
+    @GetMapping("/mypage/user")
     @Operation(summary = "회원정보 조회", description = "마이페이지 -> 회원 정보 조회")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED)

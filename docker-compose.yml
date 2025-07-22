@@ -1,0 +1,14 @@
+services:
+  spring-boot-app:
+    container_name: ballog-server
+    restart: on-failure
+    image: chaeyeon01/ballog-server:latest
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${EC2_DATASOURCE_URL}?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      S3ACCESSKEY: ${S3ACCESSKEY}
+      S3SECRETKEY: ${S3SECRETKEY}
+      TZ: Asia/Seoul
