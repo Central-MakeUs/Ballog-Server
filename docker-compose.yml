@@ -12,3 +12,4 @@ services:
       S3ACCESSKEY: ${S3ACCESSKEY}
       S3SECRETKEY: ${S3SECRETKEY}
       TZ: Asia/Seoul
+      
