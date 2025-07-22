@@ -68,3 +68,6 @@ tasks.named('test') {
 tasks.bootJar {
     mainClass = 'com.example.ballog.BallogApplication'
 }
+jar {
+    enabled = false
+}
