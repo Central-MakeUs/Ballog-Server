@@ -65,8 +65,8 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.bootJar {
-    mainClass = 'com.example.ballog.BallogApplication'
+bootJar {
+    enabled = true
 }
 jar {
     enabled = false
