@@ -45,7 +45,7 @@ public class MatchRecordController {
         MatchRecordResponse response = matchRecordService.createRecord(request, userDetails.getUser());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(BasicResponse.ofSuccess("직관 기록 등록 성공", HttpStatus.OK.value(),  response));
+                .body(BasicResponse.ofSuccess("직관 기록 등록 성공",response));
     }
 
     @PatchMapping("/{recordId}/result")
@@ -65,7 +65,7 @@ public class MatchRecordController {
 
         matchRecordService.updateResult(recordId, request.getResult());
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("경기 결과 입력 성공", HttpStatus.OK.value(), null));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("경기 결과 입력 성공"));
     }
 
     @GetMapping("/{recordId}")
@@ -86,7 +86,7 @@ public class MatchRecordController {
         MatchRecordDetailResponse response = matchRecordService.getRecordDetail(recordId, userDetails.getUser());
 
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("직관 기록 상세 조회 성공", HttpStatus.OK.value(), response));
+                BasicResponse.ofSuccess("직관 기록 상세 조회 성공",  response));
     }
 
     @GetMapping
@@ -105,7 +105,7 @@ public class MatchRecordController {
 
         MatchRecordListResponse response = matchRecordService.getAllRecordsByUser(userDetails.getUser());
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("전체 직관 기록 목록 조회 성공", HttpStatus.OK.value(), response));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("전체 직관 기록 목록 조회 성공",response));
     }
 
 
@@ -132,7 +132,7 @@ public class MatchRecordController {
 
         matchRecordService.deleteRecord(recordId);
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 삭제 성공", HttpStatus.OK.value(), null));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 삭제 성공"));
     }
 
 

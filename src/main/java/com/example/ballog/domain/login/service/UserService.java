@@ -106,6 +106,11 @@ public class UserService {
     @Transactional
     public void withdraw(Long userId) {
 
+        List<Alert> alerts = alertRepository.findAllByUserUserId(userId);
+        if (!alerts.isEmpty()) {
+            alertRepository.deleteAll(alerts);
+        }
+
         List<OAuthToken> tokens = oAuthTokenRepository.findAllByUserUserId(userId);
         if (!tokens.isEmpty()) {
             oAuthTokenRepository.deleteAll(tokens);

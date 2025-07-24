@@ -24,16 +24,12 @@ public class BasicResponse<T> {
         return new BasicResponse<>(DEFAULT_MESSAGE, status.value(), successMessage, data);
     }
 
-    public static BasicResponse<Void> ofMessage(String successMessage) {
+    public static <T> BasicResponse<T> ofSuccess(String successMessage) {
         return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value(), successMessage, null);
     }
 
-    public static <T> BasicResponse<T> ofSuccess(T data) {
-        return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value(), "요청 성공", data);
-    }
-
-    public static <T> BasicResponse<T> ofSuccess(String successMessage, int statusCode, T data) {
-        return new BasicResponse<>(DEFAULT_MESSAGE, statusCode, successMessage, data);
+    public static <T> BasicResponse<T> ofSuccess(String successMessage, T data) {
+        return new BasicResponse<>(DEFAULT_MESSAGE, HttpStatus.OK.value() , successMessage, data);
     }
 
     public static <T> BasicResponse<T> ofSuccess(T data, String successMessage) {

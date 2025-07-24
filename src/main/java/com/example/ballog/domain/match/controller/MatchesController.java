@@ -50,7 +50,7 @@ public class MatchesController {
 
         MatchesResponse response = matchesService.createMatches(request);
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("경기일정이 등록 성공", HttpStatus.OK.value(), response)
+                BasicResponse.ofSuccess("경기일정이 등록 성공",response)
         );
     }
 
@@ -59,7 +59,7 @@ public class MatchesController {
     public ResponseEntity<BasicResponse<List<MatchesResponse>>> getTodayMatches() {
         List<MatchesResponse> todayMatches = matchesService.getTodayMatches();
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("오늘 경기 일정 조회 성공", HttpStatus.OK.value(), todayMatches)
+                BasicResponse.ofSuccess("오늘 경기 일정 조회 성공", todayMatches)
         );
     }
 
@@ -68,7 +68,7 @@ public class MatchesController {
     public ResponseEntity<BasicResponse<Map<String, List<MatchesGroupedResponse>>>> getAllMatchesGroupedByDate() {
         Map<String, List<MatchesGroupedResponse>> groupedMatches = matchesService.getAllMatchesGroupedByDate();
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("전체 경기 일정 조회 성공", HttpStatus.OK.value(), groupedMatches)
+                BasicResponse.ofSuccess("전체 경기 일정 조회 성공", groupedMatches)
         );
     }
 
@@ -80,7 +80,7 @@ public class MatchesController {
     public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId")  Long matchId) {
         MatchesResponse response = matchesService.getMatchDetail(matchId);
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("경기 상세 조회 성공", HttpStatus.OK.value(), response)
+                BasicResponse.ofSuccess("경기 상세 조회 성공", response)
         );
     }
 
@@ -108,7 +108,7 @@ public class MatchesController {
         MatchesResponse updatedMatch = matchesService.updateMatch(matchId, request);
 
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("경기일정 수정 성공", HttpStatus.OK.value(), updatedMatch)
+                BasicResponse.ofSuccess("경기일정 수정 성공",updatedMatch)
         );
     }
 

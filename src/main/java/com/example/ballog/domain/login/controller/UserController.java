@@ -208,7 +208,7 @@ public class UserController {
                 user.getRole().name()
         );
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess(response));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 조회 성공", response));
     }
 
 }
