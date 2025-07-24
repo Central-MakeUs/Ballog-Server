@@ -1,4 +1,5 @@
 server:
+#  port : 8081 #로컬
   port : 8080
 
 spring :
@@ -37,16 +38,6 @@ spring :
 
 kakao:
   admin-key: ${KAKAO_ADMIN_KEY}
-
-
-#ec2:
-#  remote_jump_host: ${EC2_IP_ADDRESS}
-#  ssh_port: 22
-#  user: ${EC2_USER}
-#  private_key_path: ${EC2_PRIVATE_KEY_PATH}
-#  database_endpoint: ${EC2_DATABASE_ENDPOINT}
-#  database_port: 3306
-
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}

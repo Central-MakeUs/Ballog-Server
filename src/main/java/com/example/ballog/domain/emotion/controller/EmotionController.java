@@ -43,7 +43,7 @@ public class EmotionController {
         EmotionResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(BasicResponse.ofSuccess("감정 표현 등록 성공", HttpStatus.OK.value(), response));
+                .body(BasicResponse.ofSuccess("감정 표현 등록 성공", response));
     }
 
 
@@ -64,7 +64,7 @@ public class EmotionController {
 
         EmotionResponse response = emotionService.getEmotionRatio(recordId, userDetails.getUser().getUserId());
 
-        return ResponseEntity.ok(BasicResponse.ofSuccess("감정 비율 조회 성공", HttpStatus.OK.value(), response));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("감정 비율 조회 성공",response));
     }
 
 

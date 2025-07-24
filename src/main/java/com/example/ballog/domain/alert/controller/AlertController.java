@@ -36,6 +36,6 @@ public class AlertController {
         }
         Long userId = userDetails.getUser().getUserId();
         AlertResponse response = alertService.updateAlert(userId, request);
-        return ResponseEntity.ok(BasicResponse.ofSuccess(response));
+        return ResponseEntity.ok(BasicResponse.ofSuccess("알림 설정 성공", response));
     }
 }

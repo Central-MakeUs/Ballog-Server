@@ -54,6 +54,6 @@ public class ImageController {
         ImageSaveResponse response = imageService.toImageSaveResponse(savedImage);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(BasicResponse.ofSuccess("이미지 저장 성공", HttpStatus.CREATED.value(), response));
+                .body(BasicResponse.ofSuccess("이미지 저장 성공", response));
     }
 }
