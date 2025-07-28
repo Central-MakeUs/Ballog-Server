@@ -165,6 +165,14 @@ public class MatchRecordService {
                 .build();
     }
 
+    public MatchRecordDetailResponse getRecordDetailByMatchId(Long matchId, User currentUser) {
+        MatchRecord record = matchRecordRepository.findByMatches_MatchesIdAndUser_UserId(matchId, currentUser.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
+
+        return getRecordDetail(record.getMatchrecordId(), currentUser);
+    }
+
+
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
