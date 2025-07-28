@@ -69,7 +69,7 @@ public class MatchRecordController {
     }
 
     @GetMapping("/{recordId}")
-    @Operation(summary = "직관 기록 상세 조회", description = "특정 직관 기록 상세 정보 조회")
+    @Operation(summary = "직관 기록 상세 조회-recordId 기반", description = "특정 직관 기록 상세 정보 조회")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
@@ -88,6 +88,28 @@ public class MatchRecordController {
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("직관 기록 상세 조회 성공",  response));
     }
+
+    @GetMapping("/{matchId}/match")
+    @Operation(summary = "직관 기록 상세 조회-matchId 기반", description = "특정 경기(matchId)에 대한 사용자의 직관 기록 상세 정보 조회")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD),
+            @ApiErrorResponse(ErrorCode.RECORD_NOT_OWNED)
+    })
+    public ResponseEntity<BasicResponse<MatchRecordDetailResponse>> getRecordDetailByMatchId(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("matchId") Long matchId) {
+
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        MatchRecordDetailResponse response = matchRecordService.getRecordDetailByMatchId(matchId, userDetails.getUser());
+
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("직관 기록 상세 조회 성공 (matchId 기반)", response));
+    }
+
 
     @GetMapping
     @Operation(summary = "전체 직관 기록 목록 조회", description = "로그인 사용자 본인의 모든 직관 기록 조회(= 직관로그 페이지)")
