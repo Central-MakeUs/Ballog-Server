@@ -27,6 +27,10 @@ public class OAuthToken {
     @Column(name = "provider", nullable = false, length = 50)
     private String provider;
 
+    @Column(name = "provider_id", length = 255)
+    private String providerId;  //카카오 or 애플 유저 고유 ID -> 회원탈퇴 시 필요
+
+
     @Column(name = "access_token", length = 255)
     private String accessToken;
 

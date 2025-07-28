@@ -13,5 +13,5 @@ public class ImageSaveResponse {
     private LocalDateTime createdAt;
     private Long userId;
     private Long matchesId;
-    private Long recordId;
+    private Long matchRecordId;
 }

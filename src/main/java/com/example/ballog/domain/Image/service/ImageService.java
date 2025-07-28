@@ -27,7 +27,7 @@ public class ImageService {
 
     @Transactional
     public Image saveImage(ImageSaveRequest request, Long userId) {
-        MatchRecord matchRecord = matchRecordRepository.findById(request.getRecordId())
+        MatchRecord matchRecord = matchRecordRepository.findById(request.getMatchRecordId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
         String fileName = s3Service.extractFileNameFromUrl(request.getImageUrl());
@@ -64,7 +64,7 @@ public class ImageService {
                 .createdAt(image.getCreatedAt())
                 .userId(image.getUserId())
                 .matchesId(image.getMatchesId())
-                .recordId(image.getMatchRecord().getMatchrecordId())
+                .matchRecordId(image.getMatchRecord().getMatchrecordId())
                 .build();
     }
 }
