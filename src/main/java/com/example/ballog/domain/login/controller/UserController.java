@@ -1,14 +1,14 @@
 package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
+import com.example.ballog.domain.login.dto.response.AppleResponse;
 import com.example.ballog.domain.login.dto.response.KakaoOAuthTokenResponse;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
 import com.example.ballog.domain.login.dto.response.UserInfoResponse;
+import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
-import com.example.ballog.domain.login.service.OAuthTokenService;
-import com.example.ballog.domain.login.service.TokenService;
-import com.example.ballog.domain.login.service.UserService;
+import com.example.ballog.domain.login.service.*;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.ApiErrorResponse;
@@ -33,6 +33,8 @@ import org.springframework.http.MediaType;
 @Tag(name = "Authentication", description = "Authentication API")
 public class UserController {
     private final UserService userService;
+    private final KakaoOAuthService kakaoOAuthService;
+    private final AppleOAuthService appleOAuthService;
     private final OAuthTokenService oAuthTokenService;
 
     @Value("${kakao.admin-key}")
@@ -44,31 +46,61 @@ public class UserController {
             @RequestParam(name = "code") String code) {
 
         try {
-            KakaoOAuthTokenResponse fullToken = oAuthTokenService.getFullKakaoTokenResponse(code);
+            KakaoOAuthTokenResponse fullToken = kakaoOAuthService.getFullKakaoTokenResponse(code);
             String accessToken = fullToken.getAccessToken();
 
-            User kakaoUser = oAuthTokenService.getKakaoUser(accessToken);
+            User kakaoUser = kakaoOAuthService.getKakaoUser(accessToken);
             User user = userService.findByEmail(kakaoUser.getEmail());
+
 
             if (user == null) {
                 // 1차 회원가입 -> 카카오에서 주는 정보 저장
                 User newUser = new User();
-                newUser.setKakaoId(kakaoUser.getKakaoId());
                 newUser.setEmail(kakaoUser.getEmail());
 
                 User savedUser = userService.signup(newUser);
-                oAuthTokenService.saveKakaoToken(savedUser, fullToken);
+                kakaoOAuthService.saveKakaoToken(savedUser, fullToken);
                 return userService.processLogin(savedUser, true);
             }
 
             // 이미 가입된 사용자인 경우 -> 로그인 처리
-            oAuthTokenService.saveKakaoToken(user, fullToken);
+            kakaoOAuthService.saveKakaoToken(user, fullToken);
             return userService.processLogin(user, false);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(BasicResponse.ofFailure("카카오 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    @PostMapping("/auth/login/apple")
+    @Operation(summary = "애플 회원가입 및 로그인", description = "애플 회원가입 및 로그인 처리")
+    public ResponseEntity<BasicResponse<Object>> appleSignup(
+            @RequestParam(name = "code") String code) {
+        try {
+            AppleResponse appleResponse = appleOAuthService.getAppleInfo(code);
+            String email = appleResponse.getEmail();
+            User user = userService.findByEmail(email);
+
+            if (user == null) {
+                User newUser = new User();
+                newUser.setEmail(email);
+
+                User savedUser = userService.signup(newUser);
+
+                appleOAuthService.saveAppleToken(savedUser, appleResponse);
+
+                return userService.processLogin(savedUser, true);
+            }
+
+            appleOAuthService.saveAppleToken(user, appleResponse);
+            return userService.processLogin(user, false);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("애플 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
 
@@ -103,7 +135,7 @@ public class UserController {
     }
 
     @PostMapping("/auth/logout")
-    @Operation(summary = "로그아웃", description = "카카오 및 로그아웃 API")
+    @Operation(summary = "로그아웃", description = "로그아웃 API")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.OAUTH_TOKEN_NOT_FOUND)
@@ -117,17 +149,32 @@ public class UserController {
 
         User user = userDetails.getUser();
 
-        String kakaoAccessToken = oAuthTokenService.getAccessTokenByUser(user);
-        oAuthTokenService.logoutFromKakao(kakaoAccessToken);
+        OAuthToken kakaoToken = null;
+        OAuthToken appleToken = null;
 
-        oAuthTokenService.invalidateTokensByUser(user);
+        try {
+            kakaoToken = oAuthTokenService.getTokenByUserAndProvider(user, "Kakao");
+        } catch (CustomException ignored) {}
+
+        try {
+            appleToken = oAuthTokenService.getTokenByUserAndProvider(user, "Apple");
+        } catch (CustomException ignored) {}
+
+        if (kakaoToken != null) {
+            kakaoOAuthService.logoutFromKakao(kakaoToken.getAccessToken());
+            kakaoOAuthService.invalidateTokensByUser(user);
+        } else if (appleToken != null) {
+            // Apple 로그아웃
+        } else {
+            throw new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND);
+        }
+
         userService.invalidateRefreshTokenByUserId(user.getUserId());
-
         return ResponseEntity.ok(BasicResponse.ofSuccess("로그아웃 성공"));
     }
 
     @DeleteMapping("/auth/withdraw")
-    @Operation(summary = "회원탈퇴", description = "카카오 및 회원탈퇴 API")
+    @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
             @ApiErrorResponse(ErrorCode.OAUTH_TOKEN_NOT_FOUND),
@@ -143,7 +190,25 @@ public class UserController {
 
             User user = userDetails.getUser();
 
-            oAuthTokenService.unlinkFromKakao(user);
+            OAuthToken kakaoToken = null;
+            OAuthToken appleToken = null;
+
+            try {
+                kakaoToken = oAuthTokenService.getTokenByUserAndProvider(user, "Kakao");
+            } catch (CustomException ignored) {}
+
+            try {
+                appleToken = oAuthTokenService.getTokenByUserAndProvider(user, "Apple");
+            } catch (CustomException ignored) {}
+
+            if (kakaoToken != null) {
+                kakaoOAuthService.unlinkFromKakao(user);
+            } else if (appleToken != null) {
+                // Apple 회원탈퇴
+            } else {
+                throw new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND);
+            }
+
             userService.withdraw(user.getUserId());
 
             return ResponseEntity.ok(BasicResponse.ofSuccess("회원탈퇴 성공"));
@@ -181,7 +246,6 @@ public class UserController {
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 수정 완료"));
     }
-
 
 
     @GetMapping("/mypage/user")

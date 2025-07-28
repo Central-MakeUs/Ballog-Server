@@ -11,6 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmotionEnrollRequest {
-    private Long recordId;
+    private Long matchRecordId;
     private EmotionType emotionType;
 }

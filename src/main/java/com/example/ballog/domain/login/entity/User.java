@@ -19,9 +19,6 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "kakao_id")
-    private Long kakaoId;  //카카오 유저 고유 ID -> 회원탈퇴 시 필요
-
     @Column(nullable = false, unique = true)
     private String email;
 

@@ -26,7 +26,7 @@ public class EmotionService {
 
     public EmotionResponse createEmotion(EmotionEnrollRequest request, Long currentUserId) {
 
-        MatchRecord matchRecord = matchRecordRepository.findById(request.getRecordId())
+        MatchRecord matchRecord = matchRecordRepository.findById(request.getMatchRecordId())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
 
         if (!matchRecord.getUser().getUserId().equals(currentUserId)) {
@@ -43,7 +43,7 @@ public class EmotionService {
         emotion.setCreatedAt(LocalDateTime.now());
 
         emotionRepository.save(emotion);
-        return getEmotionRatio(request.getRecordId(), currentUserId);
+        return getEmotionRatio(request.getMatchRecordId(), currentUserId);
     }
 
 

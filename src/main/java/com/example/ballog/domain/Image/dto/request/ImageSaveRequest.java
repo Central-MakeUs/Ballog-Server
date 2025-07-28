@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ImageSaveRequest {
-    private Long recordId;
+    private Long matchRecordId;
     private String imageUrl;
 }

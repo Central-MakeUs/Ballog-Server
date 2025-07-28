@@ -7,6 +7,7 @@ import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
+import com.example.ballog.domain.login.service.KakaoOAuthService;
 import com.example.ballog.domain.login.service.OAuthTokenService;
 import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
@@ -51,7 +52,7 @@ class UserControllerTest {
     private UserService userService;
 
     @MockBean
-    private OAuthTokenService oAuthTokenService;
+    private KakaoOAuthService kakaoOAuthService;
 
 
     @Test
@@ -66,8 +67,8 @@ class UserControllerTest {
         User savedUser = new User();
         savedUser.setEmail("test@kakao.com");
 
-        given(oAuthTokenService.getFullKakaoTokenResponse(code)).willReturn(token);
-        given(oAuthTokenService.getKakaoUser("accessToken")).willReturn(kakaoUser);
+        given(kakaoOAuthService.getFullKakaoTokenResponse(code)).willReturn(token);
+        given(kakaoOAuthService.getKakaoUser("accessToken")).willReturn(kakaoUser);
         given(userService.findByEmail("test@kakao.com")).willReturn(null);
         given(userService.signup(any())).willReturn(savedUser);
         given(userService.processLogin(savedUser, true)).willReturn(
@@ -85,7 +86,7 @@ class UserControllerTest {
     void kakaoLogin_실패() throws Exception {
         String invalidCode = "invalidCode";
 
-        given(oAuthTokenService.getFullKakaoTokenResponse(invalidCode))
+        given(kakaoOAuthService.getFullKakaoTokenResponse(invalidCode))
                 .willThrow(new RuntimeException("토큰 오류"));
 
         mockMvc.perform(post("/api/v1/auth/login/kakao")
@@ -154,7 +155,7 @@ class UserControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(userDetails, null));
 
-        given(oAuthTokenService.getAccessTokenByUser(user)).willReturn("accessToken");
+        given(kakaoOAuthService.getAccessTokenByUser(user)).willReturn("accessToken");
 
         mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isOk())
