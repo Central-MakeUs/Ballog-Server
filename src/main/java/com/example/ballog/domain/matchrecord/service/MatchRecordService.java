@@ -8,10 +8,7 @@ import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
-import com.example.ballog.domain.matchrecord.dto.response.MatchRecordDetailResponse;
-import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
-import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
-import com.example.ballog.domain.matchrecord.dto.response.MatchRecordSummaryResponse;
+import com.example.ballog.domain.matchrecord.dto.response.*;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.entity.Result;
 import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
@@ -24,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -91,8 +91,8 @@ public class MatchRecordService {
 
         Matches match = record.getMatches();
 
-        List<MatchRecordDetailResponse.ImageInfo> imageList = imageRepository.findByMatchRecord(record).stream()
-                .map(img -> MatchRecordDetailResponse.ImageInfo.builder()
+        List<ImageInfo> imageList = imageRepository.findByMatchRecord(record).stream()
+                .map(img -> ImageInfo.builder()
                         .imageUrl(img.getImageUrl())
                         .createdAt(img.getCreatedAt())
                         .build())
@@ -100,6 +100,8 @@ public class MatchRecordService {
 
 
         List<Emotion> emotions = emotionRepository.findByMatchRecordId(recordId);
+        emotions.sort(Comparator.comparing(Emotion::getCreatedAt));
+
         long totalCount = emotions.size();
         long positiveCount = emotions.stream()
                 .filter(e -> e.getEmotionType() == EmotionType.POSITIVE)
@@ -110,6 +112,39 @@ public class MatchRecordService {
 
         double positivePercent = totalCount == 0 ? 0.0 : (positiveCount * 100.0) / totalCount;
         double negativePercent = totalCount == 0 ? 0.0 : (negativeCount * 100.0) / totalCount;
+
+        //1분 단위 감정 그룹핑 (동일 감정 3회 이상)
+        List<EmotionGroupInfo> emotionGroupList = new ArrayList<>();
+
+        EmotionType currentType = null;
+        LocalDateTime currentGroupStart = null;
+        long currentCount = 0;
+
+        for (Emotion e : emotions) {
+            LocalDateTime truncatedToMinute = e.getCreatedAt().truncatedTo(ChronoUnit.MINUTES);
+
+            if (currentType == null) {
+                currentType = e.getEmotionType();
+                currentGroupStart = truncatedToMinute;
+                currentCount = 1;
+            } else {
+                if (truncatedToMinute.equals(currentGroupStart) && e.getEmotionType() == currentType) {
+                    currentCount++;
+                } else {
+                    if (currentCount >= 3) {
+                        emotionGroupList.add(new EmotionGroupInfo(currentGroupStart, currentType, currentCount));
+                    }
+                    currentType = e.getEmotionType();
+                    currentGroupStart = truncatedToMinute;
+                    currentCount = 1;
+                }
+            }
+        }
+
+        if (currentCount >= 3) {
+            emotionGroupList.add(new EmotionGroupInfo(currentGroupStart, currentType, currentCount));
+        }
+
 
         return MatchRecordDetailResponse.builder()
                 .matchRecordId(record.getMatchrecordId())
@@ -126,6 +161,7 @@ public class MatchRecordService {
                 .positiveEmotionPercent(positivePercent)
                 .negativeEmotionPercent(negativePercent)
                 .imageList(imageList)
+                .emotionGroupList(emotionGroupList)
                 .build();
     }
 

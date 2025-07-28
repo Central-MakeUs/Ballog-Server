@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -29,11 +28,5 @@ public class MatchRecordDetailResponse {
     private double negativeEmotionPercent;
     private String defaultImageUrl;
     private List<ImageInfo> imageList;
-
-    @Getter
-    @Builder
-    public static class ImageInfo {
-        private String imageUrl;
-        private LocalDateTime createdAt;
-    }
+    private List<EmotionGroupInfo> emotionGroupList;
 }
