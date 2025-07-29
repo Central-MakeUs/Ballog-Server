@@ -107,21 +107,20 @@ public class KakaoOAuthService {
     }
 
     @Transactional
-    public void saveKakaoToken(User user, KakaoOAuthTokenResponse kakaoToken) {
-
+    public void saveKakaoToken(User user, String accessToken, String refreshToken) {
         User savedUser = userRepository.findById(user.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
         OAuthToken token = oAuthTokenRepository.findByUser(savedUser)
                 .orElse(new OAuthToken());
 
-        String providerUserId = getKakaoProviderUserId(kakaoToken.getAccessToken());
+        String providerUserId = getKakaoProviderUserId(accessToken);
 
         token.setUser(savedUser);
         token.setProvider("kakao");
         token.setProviderId(providerUserId);
-        token.setAccessToken(kakaoToken.getAccessToken());
-        token.setRefreshToken(kakaoToken.getRefreshToken());
+        token.setAccessToken(accessToken);
+        token.setRefreshToken(refreshToken);
 
         oAuthTokenRepository.save(token);
     }
@@ -166,7 +165,7 @@ public class KakaoOAuthService {
                     .orElseThrow(() -> new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND));
 
             KakaoOAuthTokenResponse newToken = renewAccessToken(token.getRefreshToken());
-            saveKakaoToken(persistentUser, newToken);
+            saveKakaoToken(persistentUser,  newToken.getAccessToken(), newToken.getRefreshToken());
 
             requestUnlinkToKakao(newToken.getAccessToken());
         }
