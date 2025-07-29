@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FcmTokenRequest {
-    private Long userId;
-    private String token;
+    private String token; //사용자 디바이스 토큰
 }

@@ -1,10 +1,13 @@
 package com.example.ballog.domain.match.controller;
 
+import com.example.ballog.domain.alert.service.MatchAlertSetupService;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
+import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
+import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -29,6 +32,7 @@ import java.util.Map;
 public class MatchesController {
 
     private final MatchesService matchesService;
+    private final MatchAlertSetupService matchAlertSetupService;
 
     @PostMapping
     @Operation(summary = "경기일정 등록", description = "관리자만이 경기일정을 등록 가능")
@@ -48,9 +52,11 @@ public class MatchesController {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
-        MatchesResponse response = matchesService.createMatches(request);
+        MatchesWithResponse result = matchesService.createMatches(request);
+        matchAlertSetupService.scheduleUserAlertsForMatch(result.getMatches());
+
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("경기일정이 등록 성공",response)
+                BasicResponse.ofSuccess("경기일정이 등록 성공", result.getResponse())
         );
     }
 

@@ -4,6 +4,7 @@ import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
+import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
@@ -29,7 +30,7 @@ public class MatchesService {
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
 
-    public MatchesResponse createMatches(MatchesRequest request){
+    public MatchesWithResponse createMatches(MatchesRequest request){
         Matches match = new Matches();
         match.setMatchesDate(request.getMatchesDate());
         match.setMatchesTime(request.getMatchesTime());
@@ -39,7 +40,7 @@ public class MatchesService {
         match.setMatchesResult(request.getMatchesResult());
 
         Matches saved = matchesRepository.save(match);
-        return new MatchesResponse(
+        MatchesResponse response = new MatchesResponse(
                 saved.getMatchesId(),
                 saved.getMatchesDate(),
                 saved.getMatchesTime(),
@@ -48,6 +49,8 @@ public class MatchesService {
                 saved.getStadium(),
                 saved.getMatchesResult()
         );
+
+        return new MatchesWithResponse(saved, response);
     }
 
 

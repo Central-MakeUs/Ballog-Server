@@ -6,7 +6,10 @@ import com.example.ballog.domain.alert.service.AlertService;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
+import com.example.ballog.global.common.message.ApiErrorResponse;
+import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +29,12 @@ public class AlertController {
 
     private final AlertService alertService;
 
+
     @PatchMapping("/alert")
+    @Operation(summary = "마이페이지 알림설정 on/off", description = "마이페이지-> 경기 시작전&시작 후 알림설정 on/off")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
+    })
     public ResponseEntity<BasicResponse<AlertResponse>> updateAlert(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody AlertUpdateRequest request

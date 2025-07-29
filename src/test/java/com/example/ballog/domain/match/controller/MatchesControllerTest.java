@@ -6,6 +6,8 @@ import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
+import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
+import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.entity.Stadium;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
@@ -74,8 +76,12 @@ class MatchesControllerTest {
                 request.getMatchesResult()
         );
 
+        Matches matches = new Matches();
+
+        MatchesWithResponse matchesWithResponse = new MatchesWithResponse(matches, response);
+
         given(matchesService.createMatches(any(MatchesRequest.class)))
-                .willReturn(response);
+                .willReturn(matchesWithResponse);
 
         mockMvc.perform(post("/api/v1/match")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,6 +92,7 @@ class MatchesControllerTest {
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.success").value("경기일정이 등록 성공"));
     }
+
 
     @Test
     void createMatch_실패() throws Exception {

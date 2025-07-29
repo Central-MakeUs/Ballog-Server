@@ -1,4 +1,4 @@
-package com.example.ballog.domain.alert.service;
+package com.example.ballog.domain.alert.firbase;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
