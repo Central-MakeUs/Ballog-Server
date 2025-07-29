@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AlertService {
 
     private final AlertRepository alertRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public AlertResponse updateAlert(Long userId, AlertUpdateRequest request) {

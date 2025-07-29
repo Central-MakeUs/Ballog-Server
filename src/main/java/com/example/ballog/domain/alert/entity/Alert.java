@@ -29,4 +29,5 @@ public class Alert {
 
     @Column(name = "in_game_alert", nullable = false)
     private Boolean inGameAlert= false;
+
 }
