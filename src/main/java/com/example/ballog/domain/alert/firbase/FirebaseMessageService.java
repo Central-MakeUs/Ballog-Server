@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FirebaseMessageService {
 
-    private final UserService userService;
-
     public String sendMessage(FcmMessageRequest request) {
         Message message = Message.builder()
                 .putData("title", request.getTitle())
@@ -23,10 +21,10 @@ public class FirebaseMessageService {
 
         try {
             String response = FirebaseMessaging.getInstance().send(message);
-            return "메시지 전달 성공: " + response;
+            return "알림 메시지 전달 성공: " + response;
         } catch (FirebaseMessagingException e) {
             e.printStackTrace();
-            return "메시지 전달 실패";
+            return "알림 메시지 전달 실패";
         }
     }
 }
