@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.MediaType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
@@ -37,21 +40,39 @@ public class UserController {
     private final AppleOAuthService appleOAuthService;
     private final OAuthTokenService oAuthTokenService;
 
-    @Value("${kakao.admin-key}")
-    private String adminKey;
-
-    @PostMapping("/auth/login/kakao")
-    @Operation(summary = "카카오 회원가입 및 로그인", description = "카카오 회원가입 및 로그인 처리")
-    public ResponseEntity<BasicResponse<Object>> kakaoSignup(
-            @RequestParam(name = "code") String code) {
+    @PostMapping("/token")
+    @Operation(summary = "카카오 토큰 발급-백엔드 test용", description = "인가코드로 accessToken, refreshToken 발급")
+    public ResponseEntity<BasicResponse<Map<String, String>>> getKakaoToken(@RequestBody Map<String, String> request) {
+        String code = request.get("code");
 
         try {
-            KakaoOAuthTokenResponse fullToken = kakaoOAuthService.getFullKakaoTokenResponse(code);
-            String accessToken = fullToken.getAccessToken();
+            KakaoOAuthTokenResponse tokenResponse = kakaoOAuthService.getFullKakaoTokenResponse(code);
+
+            Map<String, String> result = new HashMap<>();
+            result.put("accessToken", tokenResponse.getAccessToken());
+            result.put("refreshToken", tokenResponse.getRefreshToken());
+
+            return ResponseEntity.ok(BasicResponse.ofSuccess(result, "카카오 토큰 발급 성공"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(BasicResponse.ofFailure("카카오 토큰 발급 실패", HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+    }
+
+    @PostMapping("/auth/login/kakao")
+    @Operation(summary = "카카오 로그인 - native", description = "헤더로 accessToken과 refreshToken을 전달받아 카카오 회원가입 및 로그인 처리")
+    public ResponseEntity<BasicResponse<Object>> kakaoLogin(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestHeader("X-Refresh-Token") String refreshToken) {
+        try {
+            if (!authorizationHeader.startsWith("Bearer ")) {
+                throw new CustomException(ErrorCode.INVALID_TOKEN);
+            }
+            String accessToken = authorizationHeader.substring(7);
 
             User kakaoUser = kakaoOAuthService.getKakaoUser(accessToken);
             User user = userService.findByEmail(kakaoUser.getEmail());
-
 
             if (user == null) {
                 // 1차 회원가입 -> 카카오에서 주는 정보 저장
@@ -59,12 +80,12 @@ public class UserController {
                 newUser.setEmail(kakaoUser.getEmail());
 
                 User savedUser = userService.signup(newUser);
-                kakaoOAuthService.saveKakaoToken(savedUser, fullToken);
+                kakaoOAuthService.saveKakaoToken(savedUser, accessToken, refreshToken);
                 return userService.processLogin(savedUser, true);
             }
 
             // 이미 가입된 사용자인 경우 -> 로그인 처리
-            kakaoOAuthService.saveKakaoToken(user, fullToken);
+            kakaoOAuthService.saveKakaoToken(user, accessToken, refreshToken);
             return userService.processLogin(user, false);
 
         } catch (Exception e) {
