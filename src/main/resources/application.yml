@@ -1,0 +1,88 @@
+server:
+#  port : 8081 #로컬
+  port : 8080
+
+spring :
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url : ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.dialect: org.hibernate.dialect.MySQLDialect
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET}
+            redirect-uri: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI}
+            authorization-grant-type: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE}
+            client-name: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_NAME}
+
+          apple:
+            client-id: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_ID}
+            client-secret: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_SECRET}
+            redirect-uri: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_REDIRECT_URI}
+            authorization-grant-type: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_AUTHORIZATION_GRANT_TYPE}
+            client-name: ${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_NAME}
+
+
+        provider:
+          kakao:
+            authorization-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_AUTHORIZATION_URI}
+            token-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_TOKEN_URI}
+            user-info-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_INFO_URI}
+            user-name-attribute: ${SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE}
+          apple:
+            user-info-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_USER_INFO_URI}
+            token-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_TOKEN_URI}
+            authorization-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_AUTHORIZATION_URI}
+
+
+apple:
+  key-id: ${APPLE_LOGIN_KEY}
+  team-id: ${APPLE_TEAM_ID}
+  key-path: ${APPLE_KET_PATH}
+
+
+
+kakao:
+  admin-key: ${KAKAO_ADMIN_KEY}
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+
+cloud:
+  aws:
+    s3:
+      bucket: ballog-bucket
+    credentials:
+      access-key: ${S3ACCESSKEY}
+      secret-key: ${S3SECRETKEY}
+    region:
+      static: ap-northeast-2
+      auto: false
+    stack:
+      auto: false
+
+app:
+  default-image-url: ${DEFAULT_IMAGE}
+
+firebase:
+  service-account:
+    path: firebase/service-account.json
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
