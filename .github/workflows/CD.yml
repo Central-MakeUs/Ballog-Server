@@ -1,0 +1,100 @@
+name: CD Pipeline
+
+
+on:
+   workflow_run:
+    # CI Pipeline이 실행된 후 실행
+    workflows: [ "CI Pipeline" ]
+    types:
+      - completed
+
+jobs:
+  deploy:
+
+    # 리눅스 서버의 Runner에서 실행
+    runs-on: self-hosted
+
+    steps:
+
+      # 현재 레포지토리 가져오기
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Docker 로그인
+      - name: Login to Dockerhub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      # Docker 이미지 Pull
+      - name: Pull Docker image
+        run: docker pull  ${{ secrets.DOCKER_USERNAME }}/ballog-server:latest
+
+      # ballog-server가 실행중인 경우 중지
+      - name: Stop ballog-server
+        run: docker stop ballog-server || true && docker rm ballog-server || true
+
+       # spring-boot-app만 다시 실행
+      - name: Deploy with Docker Compose
+        env:
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          S3ACCESSKEY: ${{ secrets.S3ACCESSKEY }}
+          S3SECRETKEY: ${{ secrets.S3SECRETKEY }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+          KAKAO_AUTHORIZATION_GRANT_TYPE: ${{ secrets.KAKAO_AUTHORIZATION_GRANT_TYPE }}
+          KAKAO_CLIENT_NAME: ${{ secrets.KAKAO_CLIENT_NAME }}
+          KAKAO_AUTHORIZATION_URI: ${{ secrets.KAKAO_AUTHORIZATION_URI }}
+          KAKAO_TOKEN_URI: ${{ secrets.KAKAO_TOKEN_URI }}
+          KAKAO_USER_INFO_URI:  ${{ secrets.KAKAO_USER_INFO_URI }}
+          KAKAO_USER_NAME_ATTRIBUTE: ${{ secrets.KAKAO_USER_NAME_ATTRIBUTE }}
+          APPLE_CLIENT_ID: ${{ secrets.APPLE_CLIENT_ID }}
+          APPLE_CLIENT_SECRET: ${{ secrets.APPLE_CLIENT_SECRET }}
+          APPLE_REDIRECT_URI: ${{ secrets.APPLE_REDIRECT_URI }}
+          APPLE_AUTHORIZATION_GRANT_TYPE: ${{ secrets.APPLE_AUTHORIZATION_GRANT_TYPE }}
+          APPLE_CLIENT_NAME: ${{ secrets.APPLE_CLIENT_NAME }}
+          APPLE_AUTHORIZATION_URI:  ${{ secrets.APPLE_AUTHORIZATION_URI }}
+          APPLE_TOKEN_URI:  ${{ secrets.APPLE_TOKEN_URI }}
+          APPLE_PUBLICKEY_URL: ${{ secrets.APPLE_PUBLICKEY_URL }}
+          APPLE_USER_INFO_URI: ${{ secrets.APPLE_USER_INFO_URI }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_LOGIN_KEY: ${{ secrets.APPLE_LOGIN_KEY }}
+          APPLE_KEY_PATH: ${{ secrets.APPLE_KEY_PATH }}
+          KAKAO_ADMIN_KEY: ${{ secrets.KAKAO_ADMIN_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          DEFAULT_IMAGE: ${{ secrets.DEFAULT_IMAGE }}
+          
+        run: |
+          echo "SPRING_DATASOURCE_USERNAME=$DB_USERNAME" >> .env
+          echo "SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD" >> .env
+          echo "S3ACCESSKEY=$S3ACCESSKEY" >> .env
+          echo "S3SECRETKEY=$S3SECRETKEY" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_REDIRECT_URI=$KAKAO_REDIRECT_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_AUTHORIZATION_GRANT_TYPE=$KAKAO_AUTHORIZATION_GRANT_TYPE" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KAKAO_CLIENT_NAME=$KAKAO_CLIENT_NAME" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_AUTHORIZATION_URI=$KAKAO_AUTHORIZATION_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_TOKEN_URI=$KAKAO_TOKEN_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_INFO_URI=$KAKAO_USER_INFO_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_KAKAO_USER_NAME_ATTRIBUTE=$KAKAO_USER_NAME_ATTRIBUTE" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_ID=$APPLE_CLIENT_ID" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_SECRET=$APPLE_CLIENT_SECRET" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_REDIRECT_URI=$APPLE_REDIRECT_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_AUTHORIZATION_GRANT_TYPE=$APPLE_AUTHORIZATION_GRANT_TYPE" >> .env
+          echo "SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_NAME=$APPLE_CLIENT_NAME" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_AUTHORIZATION_URI=$APPLE_AUTHORIZATION_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_TOKEN_URI=$APPLE_TOKEN_URI" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_PUBLICKEY_URL=$APPLE_PUBLICKEY_URL" >> .env
+          echo "SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_USER_INFO_URI=$APPLE_USER_INFO_URI" >> .env
+          echo "APPLE_TEAM_ID=$APPLE_TEAM_ID" >> .env
+          echo "APPLE_LOGIN_KEY=$APPLE_LOGIN_KEY" >> .env
+          echo "APPLE_KEY_PATH=$APPLE_KEY_PATH" >> .env
+          echo "KAKAO_ADMIN_KEY=$KAKAO_ADMIN_KEY" >> .env
+          echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" >> .env
+          echo "DEFAULT_IMAGE=$DEFAULT_IMAGE" >> .env
+          
+          docker-compose rm --force spring-boot-app && docker-compose up -d spring-boot-app
