@@ -51,7 +51,7 @@ spring :
 apple:
   key-id: ${APPLE_LOGIN_KEY}
   team-id: ${APPLE_TEAM_ID}
-  key-path: ${APPLE_KET_PATH}
+  key-path: ${APPLE_KEY_PATH}
 
 
 
