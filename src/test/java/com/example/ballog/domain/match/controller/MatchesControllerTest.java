@@ -337,7 +337,7 @@ class MatchesControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.success").value("요청 성공"));
+                .andExpect(jsonPath("$.success").value("경기일정 삭제 성공"));
     }
 
 
