@@ -25,6 +25,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.mockito.BDDMockito.*;
@@ -54,14 +56,16 @@ class MatchRecordControllerTest {
         User user = new User();
         user.setUserId(10L);
         user.setEmail("user@example.com");
+        LocalDate matchDate = LocalDate.of(2025, 7, 18);
+        LocalTime matchTime = LocalTime.of(18, 30);
 
         MatchRecordResponse response = MatchRecordResponse.builder()
                 .matchRecordId(100L)
                 .matchesId(1L)
-                .homeTeam("LG 트윈스")
-                .awayTeam("KT 위즈")
-                .matchDate("2025-07-18")
-                .matchTime("18:30")
+                .homeTeam(BaseballTeam.LG_TWINS)
+                .awayTeam(BaseballTeam.KT_WIZ)
+                .matchDate(matchDate)
+                .matchTime(matchTime)
                 .userId(10L)
                 .watchCnt(1L)
                 .result(Result.WIN)
@@ -170,14 +174,17 @@ class MatchRecordControllerTest {
 
         User user = new User();
         user.setUserId(100L);
+        LocalDate matchDate = LocalDate.of(2025, 7, 18);
+        LocalTime matchTime = LocalTime.of(18, 30);
+
 
         MatchRecordDetailResponse response = MatchRecordDetailResponse.builder()
                 .matchRecordId(recordId)
                 .matchesId(5L)
-                .homeTeam("LG 트윈스")
-                .awayTeam("KT 위즈")
-                .matchDate("2025-07-18")
-                .matchTime("18:30")
+                .homeTeam(BaseballTeam.LG_TWINS)
+                .awayTeam(BaseballTeam.KT_WIZ)
+                .matchDate(matchDate)
+                .matchTime(matchTime)
                 .userId(100L)
                 .result(Result.WIN)
                 .build();
@@ -191,7 +198,7 @@ class MatchRecordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value("직관 기록 상세 조회 성공"))
                 .andExpect(jsonPath("$.data.matchRecordId").value(recordId))
-                .andExpect(jsonPath("$.data.homeTeam").value("LG 트윈스"));
+                .andExpect(jsonPath("$.data.homeTeam").value("LG_TWINS"));
     }
 
     @Test
@@ -223,15 +230,17 @@ class MatchRecordControllerTest {
         user.setUserId(10L);
         user.setEmail("user@example.com");
         CustomUserDetails userDetails = new CustomUserDetails(user);
+        LocalDate matchDate = LocalDate.of(2025, 7, 18);
+        LocalTime matchTime = LocalTime.of(18, 30);
 
         List<MatchRecordSummaryResponse> records = List.of(
                 MatchRecordSummaryResponse.builder()
                         .matchRecordId(1L)
                         .matchesId(1L)
-                        .homeTeam("LG 트윈스")
-                        .awayTeam("KT 위즈")
-                        .matchDate("2025-07-18")
-                        .matchTime("18:30")
+                        .homeTeam(BaseballTeam.LG_TWINS)
+                        .awayTeam(BaseballTeam.KT_WIZ)
+                        .matchDate(matchDate)
+                        .matchTime(matchTime)
                         .userId(10L)
                         .watchCnt(1L)
                         .result(Result.WIN)
@@ -259,7 +268,7 @@ class MatchRecordControllerTest {
                 .andExpect(jsonPath("$.data.totalPositiveEmotionPercent").value(70.0))
                 .andExpect(jsonPath("$.data.totalNegativeEmotionPercent").value(30.0))
                 .andExpect(jsonPath("$.data.records[0].matchRecordId").value(1))
-                .andExpect(jsonPath("$.data.records[0].homeTeam").value("LG 트윈스"));
+                .andExpect(jsonPath("$.data.records[0].homeTeam").value("LG_TWINS"));
     }
 
     @Test

@@ -2,13 +2,11 @@ package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
-import com.example.ballog.domain.login.dto.response.KakaoOAuthTokenResponse;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.KakaoOAuthService;
-import com.example.ballog.domain.login.service.OAuthTokenService;
 import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -57,40 +55,39 @@ class UserControllerTest {
 
     @Test
     void kakaoLogin_성공() throws Exception {
-        String code = "validCode";
-        KakaoOAuthTokenResponse token = new KakaoOAuthTokenResponse("accessToken", "refreshToken");
+        String accessToken = "accessToken";
+        String refreshToken = "refreshToken";
 
         User kakaoUser = new User();
         kakaoUser.setEmail("test@kakao.com");
-        kakaoUser.setKakaoId(1234567L);
 
         User savedUser = new User();
         savedUser.setEmail("test@kakao.com");
 
-        given(kakaoOAuthService.getFullKakaoTokenResponse(code)).willReturn(token);
-        given(kakaoOAuthService.getKakaoUser("accessToken")).willReturn(kakaoUser);
+        given(kakaoOAuthService.getKakaoUser(accessToken)).willReturn(kakaoUser);
         given(userService.findByEmail("test@kakao.com")).willReturn(null);
         given(userService.signup(any())).willReturn(savedUser);
         given(userService.processLogin(savedUser, true)).willReturn(
                 ResponseEntity.ok(BasicResponse.ofSuccess("회원가입 성공")));
 
         mockMvc.perform(post("/api/v1/auth/login/kakao")
-                        .param("code", code))
+                        .header("Authorization", "Bearer " + accessToken)
+                        .header("X-Refresh-Token", refreshToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value("요청 성공"))
-                .andExpect(jsonPath("$.data").value("회원가입 성공"));
+                .andExpect(jsonPath("$.success").value("회원가입 성공"));
     }
-
 
     @Test
     void kakaoLogin_실패() throws Exception {
-        String invalidCode = "invalidCode";
+        String accessToken = "invalidAccessToken";
+        String refreshToken = "invalidRefreshToken";
 
-        given(kakaoOAuthService.getFullKakaoTokenResponse(invalidCode))
+        given(kakaoOAuthService.getKakaoUser(accessToken))
                 .willThrow(new RuntimeException("토큰 오류"));
 
         mockMvc.perform(post("/api/v1/auth/login/kakao")
-                        .param("code", invalidCode))
+                        .header("Authorization", "Bearer " + accessToken)
+                        .header("X-Refresh-Token", refreshToken))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("fail"))
                 .andExpect(jsonPath("$.status").value(500))
@@ -116,8 +113,7 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value("요청 성공"))
-                .andExpect(jsonPath("$.data").value("회원가입 완료"));
+                .andExpect(jsonPath("$.success").value("회원가입 완료"));
     }
 
     @Test
@@ -159,8 +155,7 @@ class UserControllerTest {
 
         mockMvc.perform(post("/api/v1/auth/logout"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value("요청 성공"))
-                .andExpect(jsonPath("$.data").value("로그아웃 성공"));
+                .andExpect(jsonPath("$.success").value("로그아웃 성공"));
     }
 
     @Test
@@ -185,8 +180,7 @@ class UserControllerTest {
 
         mockMvc.perform(delete("/api/v1/auth/withdraw"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value("요청 성공"))
-                .andExpect(jsonPath("$.data").value("회원탈퇴 성공"));
+                .andExpect(jsonPath("$.success").value("회원탈퇴 성공"));
     }
 
 
@@ -230,9 +224,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("success"))
                 .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.success").value("요청 성공"))
-                .andExpect(jsonPath("$.data").value("회원 정보 수정 완료"));
-
+                .andExpect(jsonPath("$.success").value("회원 정보 수정 완료"));
     }
 
     @Test

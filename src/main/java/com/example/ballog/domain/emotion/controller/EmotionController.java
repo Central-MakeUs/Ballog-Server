@@ -67,6 +67,4 @@ public class EmotionController {
         return ResponseEntity.ok(BasicResponse.ofSuccess("감정 비율 조회 성공",response));
     }
 
-
-
 }
