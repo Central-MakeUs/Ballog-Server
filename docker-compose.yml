@@ -7,7 +7,7 @@ services:
     build: .
     image: chaeyeon01/ballog-server:latest
     ports:
-      - "8080:8080"
+      - "8082:8082"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://my-ballog-rds.ctyqwew2u606.ap-northeast-2.rds.amazonaws.com:3306/ballog?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
