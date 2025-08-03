@@ -47,7 +47,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-resources/**",
             "/error",
-            "/api/v1/**"
+            "/api/v1/**",
+            "https://appleid.apple.com/**"
     };
 
     @Bean
