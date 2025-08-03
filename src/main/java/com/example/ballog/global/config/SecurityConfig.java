@@ -47,7 +47,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-resources/**",
             "/error",
-            "/api/v1/**"
+            "/api/v1/**",
+            "https://appleid.apple.com/**"
     };
 
     @Bean
@@ -55,7 +56,6 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         configuration.addExposedHeader("Authorization");
-        configuration.addAllowedOrigin("http://localhost:5173");
         configuration.addAllowedOrigin("*");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");

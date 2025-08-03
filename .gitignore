@@ -38,3 +38,4 @@ out/
 .env
 
 src/main/resources/firebase/service-account.json
+src/main/resources/key/AuthKey_L7JJ47UN26.p8
