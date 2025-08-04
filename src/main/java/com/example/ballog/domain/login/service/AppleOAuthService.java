@@ -17,24 +17,28 @@ import lombok.RequiredArgsConstructor;
 import net.minidev.json.JSONObject;
 import net.minidev.json.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import javax.management.openmbean.InvalidKeyException;
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Date;
-
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -216,4 +220,47 @@ public class AppleOAuthService {
         return content;
     }
 
+    //애플 로그인 연결 끊기
+    public void logoutFromApple(String refreshToken) {
+        String uriStr = "https://appleid.apple.com/auth/revoke";
+
+        try {
+            String clientSecret = createClientSecret();
+
+            Map<String, String> params = new HashMap<>();
+            params.put("client_id", appleClientId);
+            params.put("client_secret", clientSecret);
+            params.put("token", refreshToken);
+            params.put("token_type_hint", "refresh_token");
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(uriStr))
+                    .POST(buildFormData(params))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .build();
+
+            HttpClient httpClient = HttpClient.newHttpClient();
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new CustomException(ErrorCode.APPLE_REVOKE_FAILED);
+            }
+
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.APPLE_REVOKE_FAILED, e.getMessage());
+        }
+    }
+
+    private static HttpRequest.BodyPublisher buildFormData(Map<String, String> data) {
+        StringBuilder form = new StringBuilder();
+
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            if (form.length() > 0) form.append("&");
+            form.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
+            form.append("=");
+            form.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+        }
+
+        return HttpRequest.BodyPublishers.ofString(form.toString());
+    }
 }

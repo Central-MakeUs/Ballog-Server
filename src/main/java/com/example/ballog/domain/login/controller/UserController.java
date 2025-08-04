@@ -102,9 +102,20 @@ public class UserController {
         try {
             AppleResponse appleResponse = appleOAuthService.getAppleInfo(code);
             String email = appleResponse.getEmail();
+            String appleSub = appleResponse.getId();
             User user = userService.findByEmail(email);
 
-            if (user == null) {
+            // 1. 이메일이 있으면 이메일 기반으로 유저 찾기
+            if (email != null) {
+                user = userService.findByEmail(email);
+            }
+
+            // 2. 이메일이 없으면 애플 sub로 유저 찾기 (이전에 로그인했던 유저)
+            if (user == null && appleSub != null) {
+                user = userService.findByAppleProviderId(appleSub);
+            }
+
+            if (user == null) { //회원가입
                 User newUser = new User();
                 newUser.setEmail(email);
 
@@ -183,9 +194,10 @@ public class UserController {
 
         if (kakaoToken != null) {
             kakaoOAuthService.logoutFromKakao(kakaoToken.getAccessToken());
-            kakaoOAuthService.invalidateTokensByUser(user);
+            userService.invalidateTokensByUser(user);
         } else if (appleToken != null) {
-            // Apple 로그아웃
+            appleOAuthService.logoutFromApple(appleToken.getRefreshToken());
+            userService.invalidateTokensByUser(user);
         } else {
             throw new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND);
         }

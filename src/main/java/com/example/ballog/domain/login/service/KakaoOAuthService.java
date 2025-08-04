@@ -131,17 +131,6 @@ public class KakaoOAuthService {
                 .getAccessToken();
     }
 
-    @Transactional
-    public void invalidateTokensByUser(User user) {
-        OAuthToken token = oAuthTokenRepository.findByUser(user)
-                .orElseThrow(() -> new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND));
-
-        token.setAccessToken(null);
-        token.setRefreshToken(null);
-
-        oAuthTokenRepository.save(token);
-    }
-
     public void logoutFromKakao(String kakaoAccessToken) {
         String url = "https://kapi.kakao.com/v1/user/logout";
         HttpHeaders headers = new HttpHeaders();
