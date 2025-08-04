@@ -237,7 +237,7 @@ public class UserController {
             if (kakaoToken != null) {
                 kakaoOAuthService.unlinkFromKakao(user);
             } else if (appleToken != null) {
-                // Apple 회원탈퇴
+                appleOAuthService.logoutFromApple(appleToken.getRefreshToken());
             } else {
                 throw new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND);
             }
