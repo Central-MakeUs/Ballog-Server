@@ -14,10 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.attribute.UserPrincipal;
 
@@ -45,5 +42,22 @@ public class AlertController {
         Long userId = userDetails.getUser().getUserId();
         AlertResponse response = alertService.updateAlert(userId, request);
         return ResponseEntity.ok(BasicResponse.ofSuccess("알림 설정 성공", response));
+    }
+
+    @GetMapping("/alert")
+    @Operation(summary = "마이페이지 알림설정 조회", description = "마이페이지에서 경기 시작 전/후 알림 설정 상태 조회")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
+    })
+    public ResponseEntity<BasicResponse<AlertResponse>> getAlertSettings(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Long userId = userDetails.getUser().getUserId();
+        AlertResponse response = alertService.getAlertSettings(userId);
+        return ResponseEntity.ok(BasicResponse.ofSuccess("알림 설정 조회 성공", response));
     }
 }

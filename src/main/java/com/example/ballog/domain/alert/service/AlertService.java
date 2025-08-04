@@ -4,6 +4,7 @@ import com.example.ballog.domain.alert.dto.request.AlertUpdateRequest;
 import com.example.ballog.domain.alert.dto.response.AlertResponse;
 import com.example.ballog.domain.alert.entity.Alert;
 import com.example.ballog.domain.alert.repository.AlertRepository;
+import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -32,4 +33,11 @@ public class AlertService {
 
         return AlertResponse.from(alert);
     }
+
+    public AlertResponse getAlertSettings(Long userId) {
+        Alert alert = alertRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.ALERT_NOT_FOUND));
+        return AlertResponse.from(alert);
+    }
+
 }
