@@ -56,9 +56,12 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         configuration.addExposedHeader("Authorization");
-        configuration.addAllowedOrigin("*");
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://ballog.shop"
+        ));
         configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
