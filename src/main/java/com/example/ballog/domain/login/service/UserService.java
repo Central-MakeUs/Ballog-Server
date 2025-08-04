@@ -169,4 +169,22 @@ public class UserService {
 
         return token.getAccessToken();
     }
+
+    @Transactional
+    public void invalidateTokensByUser(User user) {
+        OAuthToken token = oAuthTokenRepository.findByUser(user)
+                .orElseThrow(() -> new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND));
+
+        token.setAccessToken(null);
+        token.setRefreshToken(null);
+
+        oAuthTokenRepository.save(token);
+    }
+
+
+    public User findByAppleProviderId(String appleSub) {
+        return oAuthTokenRepository.findByProviderAndProviderId("Apple", appleSub)
+                .map(OAuthToken::getUser)
+                .orElse(null);
+    }
 }
