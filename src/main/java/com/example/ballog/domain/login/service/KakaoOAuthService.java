@@ -154,7 +154,7 @@ public class KakaoOAuthService {
                     .orElseThrow(() -> new CustomException(ErrorCode.OAUTH_TOKEN_NOT_FOUND));
 
             KakaoOAuthTokenResponse newToken = renewAccessToken(token.getRefreshToken());
-            saveKakaoToken(persistentUser,  newToken.getAccessToken(), newToken.getRefreshToken());
+            saveKakaoToken(persistentUser, newToken.getAccessToken(), newToken.getRefreshToken());
 
             requestUnlinkToKakao(newToken.getAccessToken());
         }
@@ -195,21 +195,5 @@ public class KakaoOAuthService {
             }
             throw e;
         }
-    }
-
-    @Transactional
-    public void saveFcmToken(Long userId, String fcmToken) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
-
-        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
-                .orElse(new OAuthToken());
-
-        token.setUser(user);
-        token.setProvider("fcm");
-        token.setAccessToken(fcmToken);
-        token.setRefreshToken(null);
-
-        oAuthTokenRepository.save(token);
     }
 }

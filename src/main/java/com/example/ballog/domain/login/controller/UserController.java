@@ -16,16 +16,13 @@ import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.http.MediaType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -136,11 +133,11 @@ public class UserController {
         }
     }
 
-
     @PostMapping("/auth/signup")
-    @Operation(summary = "회원가입시 추가 정보 저장", description = "추가정보인 응원팀과 닉네임 정보를 저장")
+    @Operation(summary = "회원가입시 추가 정보 저장")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.REQUIRED_TERMS_NOT_AGREED),
             @ApiErrorResponse(ErrorCode.DUPLICATE_NICKNAME),
             @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_LENGTH),
             @ApiErrorResponse(ErrorCode.INVALID_NICKNAME_FORMAT)
@@ -155,13 +152,7 @@ public class UserController {
 
         User user = userDetails.getUser();
 
-        userService.validateNickname(request.getNickname());
-
-        user.setBaseballTeam(request.getBaseballTeam());
-        user.setNickname(request.getNickname());
-        user.setIsNewUser(false);
-
-        userService.updateUser(user);
+        userService.signup(user, request);
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("회원가입 완료"));
     }
@@ -205,6 +196,7 @@ public class UserController {
         userService.invalidateRefreshTokenByUserId(user.getUserId());
         return ResponseEntity.ok(BasicResponse.ofSuccess("로그아웃 성공"));
     }
+
 
     @DeleteMapping("/auth/withdraw")
     @Operation(summary = "회원탈퇴", description = "회원탈퇴 API")
