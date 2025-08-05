@@ -20,6 +20,8 @@ public enum ErrorCode {
     FCM_TOKEN_NOT_FOUND(404,"AUTH004","FCM 토큰값을 찾을 수 없습니다."),
     APPLE_REVOKE_FAILED(405,"APPLE001", "APPLE 연결 끊기 실패했습니다."),
 
+    //TermAgree
+    REQUIRED_TERMS_NOT_AGREED(400, "TERM001", "필수 약관에 모두 동의하지 않았습니다."),
 
     //USER
     ALREADY_EXIST_USER(403, "USER001", "이미 존재하는 사용자입니다."),

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SignupRequest {
-    private String email;
     private String nickname;
     private BaseballTeam baseballTeam;
+    private TermAgreeRequest termAgree;
 }

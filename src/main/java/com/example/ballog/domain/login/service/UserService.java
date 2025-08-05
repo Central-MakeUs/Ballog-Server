@@ -1,15 +1,21 @@
 package com.example.ballog.domain.login.service;
 
 
+import com.example.ballog.domain.Image.respository.ImageRepository;
 import com.example.ballog.domain.alert.entity.Alert;
 import com.example.ballog.domain.alert.repository.AlertRepository;
+import com.example.ballog.domain.emotion.repository.EmotionRepository;
+import com.example.ballog.domain.login.dto.request.SignupRequest;
+import com.example.ballog.domain.login.dto.request.TermAgreeRequest;
+import com.example.ballog.domain.login.entity.FcmToken;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
+import com.example.ballog.domain.login.entity.TermAgree;
 import com.example.ballog.domain.login.entity.User;
-import com.example.ballog.domain.login.repository.OAuthTokenRepository;
-import com.example.ballog.domain.login.repository.RefreshTokenRepository;
-import com.example.ballog.domain.login.repository.UserRepository;
+import com.example.ballog.domain.login.repository.*;
 import com.example.ballog.domain.login.security.CustomUserDetails;
+import com.example.ballog.domain.matchrecord.entity.MatchRecord;
+import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.BasicResponse;
@@ -22,9 +28,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.*;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +42,13 @@ public class UserService {
     private final OAuthTokenRepository oAuthTokenRepository;
     private final TokenService tokenService;
     private final AlertRepository alertRepository;
+    private final TermAgreeRepository termAgreeRepository;
+    private final MatchRecordRepository matchRecordRepository;
+    private final FcmTokenRepository fcmTokenRepository;
+    private final EmotionRepository emotionRepository;
+    private final ImageRepository imageRepository;
 
-    public User signup(User user) {
+    public User signup(User user) { //소셜 회원가입만 진행할때 - 1차 회원가입
         User savedUser = userRepository.save(user);
         Alert alert = new Alert();
         alert.setUser(savedUser);
@@ -43,6 +56,32 @@ public class UserService {
         return savedUser;
     }
 
+
+    public void signup(User user, SignupRequest request) { //회원가입 - 추가정보 입력
+        // 닉네임 검증
+        validateNickname(request.getNickname());
+
+        // 필수 약관 동의 여부 확인
+        TermAgreeRequest termAgree = request.getTermAgree();
+        if (!termAgree.isPrivacyAgree() || !termAgree.isServiceAgree()) {
+            throw new CustomException(ErrorCode.REQUIRED_TERMS_NOT_AGREED);
+        }
+
+        user.setNickname(request.getNickname());
+        user.setBaseballTeam(request.getBaseballTeam());
+        user.setIsNewUser(false);
+        userRepository.save(user);
+
+        TermAgree agree = new TermAgree();
+        agree.setUser(user);
+        agree.setPrivacyAgree(termAgree.isPrivacyAgree());
+        agree.setServiceAgree(termAgree.isServiceAgree());
+        agree.setMarketingAgree(termAgree.isMarketingAgree());
+        agree.setAgreedAt(LocalDateTime.now());
+
+        termAgreeRepository.save(agree);
+    }
+    
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
@@ -103,24 +142,23 @@ public class UserService {
         });
     }
 
+
     @Transactional
-    public void withdraw(Long userId) {
+        public void withdraw(Long userId) {
 
-        List<Alert> alerts = alertRepository.findAllByUserUserId(userId);
-        if (!alerts.isEmpty()) {
-            alertRepository.deleteAll(alerts);
-        }
-
-        List<OAuthToken> tokens = oAuthTokenRepository.findAllByUserUserId(userId);
-        if (!tokens.isEmpty()) {
-            oAuthTokenRepository.deleteAll(tokens);
-        }
-
+        alertRepository.deleteAllByUserUserId(userId);
+        emotionRepository.deleteAllByUserUserId(userId);
+        imageRepository.deleteAllByUserUserId(userId);
+        termAgreeRepository.deleteAllByUserUserId(userId);
+        termAgreeRepository.deleteAllByUserUserId(userId);
+        matchRecordRepository.deleteAllByUserUserId(userId);
+        oAuthTokenRepository.deleteAllByUserUserId(userId);
+        fcmTokenRepository.deleteAllByUserUserId(userId);
         refreshTokenRepository.findByUserUserId(userId)
                 .ifPresent(refreshTokenRepository::delete);
-
         userRepository.findById(userId)
                 .ifPresent(userRepository::delete);
+
     }
 
     public User findById(Long userId) {
@@ -149,26 +187,16 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
 
-        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
-                .orElse(new OAuthToken());
+        Optional<FcmToken> existingTokenOpt = fcmTokenRepository.findByUserAndDeviceToken(user, fcmToken);
 
-        token.setUser(user);
-        token.setProvider("fcm");
-        token.setAccessToken(fcmToken);
-        token.setRefreshToken(null);
-
-        oAuthTokenRepository.save(token);
+        if (existingTokenOpt.isEmpty()) {
+            FcmToken token = new FcmToken();
+            token.setUser(user);
+            token.setDeviceToken(fcmToken);
+            fcmTokenRepository.save(token);
+        }
     }
 
-    public String findFcmTokenByUserId(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_USER));
-
-        OAuthToken token = oAuthTokenRepository.findByUserAndProvider(user, "fcm")
-                .orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
-
-        return token.getAccessToken();
-    }
 
     @Transactional
     public void invalidateTokensByUser(User user) {

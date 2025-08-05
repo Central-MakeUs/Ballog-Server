@@ -17,4 +17,7 @@ public interface AlertRepository  extends JpaRepository<Alert, Long> {
 
     List<Alert> findByInGameAlertTrue();
     Optional<Alert> findByUser(User user);
+
+    void deleteAllByUserUserId(Long userId);
+
 }
