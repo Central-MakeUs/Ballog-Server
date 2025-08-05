@@ -14,6 +14,9 @@ public interface MatchRecordRepository extends JpaRepository<MatchRecord, Long> 
     List<MatchRecord> findAllByUserOrderByMatchrecordIdDesc(User user);
     List<MatchRecord> findAllByMatches_MatchesId(Long matchesId);
     Optional<MatchRecord> findByMatches_MatchesIdAndUser_UserId(Long matchesId, Long userId);
+    List<MatchRecord> findAllByUserUserId(Long userId);
+
+    void deleteAllByUserUserId(Long userId);
 
 
 }

@@ -14,6 +14,6 @@ public interface OAuthTokenRepository extends JpaRepository<OAuthToken, Long> {
     List<OAuthToken> findAllByUserUserId(Long userId);
     Optional<OAuthToken> findByUserAndProvider(User user, String provider);
     Optional<OAuthToken> findByProviderAndProviderId(String provider, String providerId);
-
+    void deleteAllByUserUserId(Long userId);
 
 }
