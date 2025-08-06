@@ -48,6 +48,7 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/error",
             "/api/v1/**",
+            "/favicon.ico", 
             "https://appleid.apple.com/**"
     };
 
