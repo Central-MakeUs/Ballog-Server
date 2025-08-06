@@ -3,6 +3,7 @@ package com.example.ballog.global.config;
 import com.example.ballog.domain.login.security.CustomUserDetailsService;
 import com.example.ballog.domain.login.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,6 +24,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity(debug = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    @Value("${frontend.origin.elastic}")
+    private String frontedElastic;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -59,7 +63,9 @@ public class SecurityConfig {
         configuration.addExposedHeader("Authorization");
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
+                frontedElastic,
                 "https://ballog.shop"
+
         ));
         configuration.addAllowedMethod("*");
         configuration.setAllowedHeaders(List.of("*"));
