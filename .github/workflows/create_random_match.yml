@@ -1,0 +1,103 @@
+name: Advanced Daily Baseball Matches
+
+on:
+  schedule:
+    - cron: '0 15 * * *' # 한국시간 자정 (UTC+9)
+  workflow_dispatch:
+
+jobs:
+  send_daily_matches:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Generate and send today's baseball matches
+        run: |
+          # 한국시간 기준 날짜/시간 정보
+          TODAY=$(TZ='Asia/Seoul' date '+%Y-%m-%d')
+          WEEKDAY=$(TZ='Asia/Seoul' date '+%u')  # 1=월, 7=일
+          MONTH=$(TZ='Asia/Seoul' date '+%m')
+          DAY=$(TZ='Asia/Seoul' date '+%d')
+          
+          echo "📅 Date: $TODAY (Weekday: $WEEKDAY)"
+          
+          # 팀 목록 (KBO 리그)
+          teams=("DOOSAN_BEARS" "LG_TWINS" "SSG_LANDERS" "KIA_TIGERS" "NC_DINOS" "SAMSUNG_LIONS" "LOTTE_GIANTS" "KT_WIZ" "HANWHA_EAGLES" "KIWOOM_HEROES")
+          get_stadium() {
+            case $1 in
+              "DOOSAN_BEARS"|"LG_TWINS") echo "JAMSIL" ;;
+              "LOTTE_GIANTS") echo "SAJIK" ;;
+              "SAMSUNG_LIONS") echo "DAEGU" ;;
+              "KIWOOM_HEROES") echo "GOCHUK" ;;
+              "HANWHA_EAGLES") echo "DAEJEON" ;;
+              "KIA_TIGERS") echo "GWANGJU" ;;
+              "KT_WIZ") echo "SUWON" ;;
+              "NC_DINOS") echo "CHANGWON" ;;
+              "SSG_LANDERS") echo "INCHEON" ;;
+              *) echo "JAMSIL" ;;  # 기본값
+            esac
+          }
+          
+          # 오늘의 경기 수 결정
+          if [ $WEEKDAY -eq 6 ] || [ $WEEKDAY -eq 7 ]; then
+            NUM_MATCHES=$((3 + RANDOM % 3))  # 3-5경기
+            MATCH_TIME="14:00:00"  # 주말 오후
+          else
+            NUM_MATCHES=$((3 + RANDOM % 3))  # 3-5경기 
+            MATCH_TIME="18:30:00"  # 평일 저녁
+          fi
+          
+          echo "🏟️ Generating $NUM_MATCHES matches for today"
+          
+          # 경기 데이터 생성 및 병렬 전송
+          pids=()
+          
+          for i in $(seq 1 $NUM_MATCHES); do
+            # 랜덤 팀 선택 (홈팀과 원정팀이 다르게)
+            HOME_IDX=$((RANDOM % 10))
+            AWAY_IDX=$((RANDOM % 10))
+            while [ $AWAY_IDX -eq $HOME_IDX ]; do
+              AWAY_IDX=$((RANDOM % 10))
+            done
+            
+            HOME_TEAM=${teams[$HOME_IDX]}
+            AWAY_TEAM=${teams[$AWAY_IDX]}
+            STADIUM=${get_stadium $HOME_TEAM}
+            
+            echo "Match $i: $HOME_TEAM vs $AWAY_TEAM at $STADIUM ($MATCH_TIME)"
+            
+            # 백그라운드로 POST 요청
+            {
+              response=$(curl --silent --write-out "HTTPSTATUS:%{http_code}" \
+                --request POST \
+                --url ${{ secrets.API_ENDPOINT }} \
+                --header 'Authorization: ${{ secrets.BALLOG_ACCESS_TOKEN }}' \
+                --header 'Content-Type: application/json' \
+                --data "{
+                  \"matchesDate\": \"$TODAY\",
+                  \"matchesTime\": \"$MATCH_TIME\",
+                  \"homeTeam\": \"$HOME_TEAM\",
+                  \"awayTeam\": \"$AWAY_TEAM\",
+                  \"stadium\": \"$STADIUM\"
+                }")
+              
+              http_code=$(echo $response | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
+              if [ $http_code -ge 200 ] && [ $http_code -lt 300 ]; then
+                echo "✅ Match sent successfully"
+              else
+                echo "❌ Match failed (HTTP: $http_code)"
+              fi
+            } &
+            
+            pids+=($!)
+          done
+          
+          # 모든 요청 완료 대기
+          for pid in ${pids[@]}; do
+            wait $pid
+          done
+          
+          echo "All $NUM_MATCHES matches for $TODAY have been processed!"
+          echo "Completed at $(TZ='Asia/Seoul' date '+%Y-%m-%d %H:%M:%S KST')"
