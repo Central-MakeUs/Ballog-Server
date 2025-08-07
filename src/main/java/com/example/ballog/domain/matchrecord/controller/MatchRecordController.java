@@ -32,7 +32,8 @@ public class MatchRecordController {
     @Operation(summary = "직관 기록 등록", description = "사용자가 직관 경기 실시간 기록 등록")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
-            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND),
+            @ApiErrorResponse(ErrorCode.ALREADY_RECORDED)
     })
     public ResponseEntity<BasicResponse<MatchRecordResponse>> createRecord(
             @AuthenticationPrincipal CustomUserDetails userDetails,
