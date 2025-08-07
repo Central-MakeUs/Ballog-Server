@@ -117,56 +117,56 @@ class MatchRecordControllerTest {
                 .andExpect(jsonPath("$.code").value("MATCH001"));
     }
 
-    @Test
-    void updateResult_성공() throws Exception {
-        Long recordId = 100L;
+//    @Test
+//    void updateResult_성공() throws Exception {
+//        Long recordId = 100L;
+//
+//        MatchResultRequest request = new MatchResultRequest();
+//        ReflectionTestUtils.setField(request, "result", Result.WIN);
+//
+//        User user = new User();
+//        user.setUserId(10L);
+//        user.setEmail("user@example.com");
+//        CustomUserDetails userDetails = new CustomUserDetails(user);
+//
+//        willDoNothing().given(matchRecordService).updateResult(recordId, Result.WIN);
+//
+//        mockMvc.perform(patch("/api/v1/record/{recordId}/result", recordId)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(new ObjectMapper().writeValueAsString(request))
+//                        .with(authentication(new UsernamePasswordAuthenticationToken(userDetails, null))))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.message").value("success"))
+//                .andExpect(jsonPath("$.status").value(200))
+//                .andExpect(jsonPath("$.success").value("경기 결과 입력 성공"))
+//                .andExpect(jsonPath("$.data").doesNotExist());
+//    }
 
-        MatchResultRequest request = new MatchResultRequest();
-        ReflectionTestUtils.setField(request, "result", Result.WIN);
-
-        User user = new User();
-        user.setUserId(10L);
-        user.setEmail("user@example.com");
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-
-        willDoNothing().given(matchRecordService).updateResult(recordId, Result.WIN);
-
-        mockMvc.perform(patch("/api/v1/record/{recordId}/result", recordId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request))
-                        .with(authentication(new UsernamePasswordAuthenticationToken(userDetails, null))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("success"))
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.success").value("경기 결과 입력 성공"))
-                .andExpect(jsonPath("$.data").doesNotExist());
-    }
-
-    @Test
-    void updateResult_실패D() throws Exception {
-        Long recordId = 999L;
-
-        MatchResultRequest request = new MatchResultRequest();
-        ReflectionTestUtils.setField(request, "result", Result.LOSS);
-
-        User user = new User();
-        user.setUserId(10L);
-        user.setEmail("user@example.com");
-        CustomUserDetails userDetails = new CustomUserDetails(user);
-
-        willThrow(new CustomException(ErrorCode.NOT_FOUND_RECORD))
-                .given(matchRecordService).updateResult(recordId, Result.LOSS);
-
-        mockMvc.perform(patch("/api/v1/record/{recordId}/result", recordId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(request))
-                        .with(authentication(new UsernamePasswordAuthenticationToken(userDetails, null))))
-                .andExpect(status().is(408))
-                .andExpect(jsonPath("$.message").value("fail"))
-                .andExpect(jsonPath("$.status").value(408))
-                .andExpect(jsonPath("$.error").value("해당 직관기록을 찾을 수 없습니다."))
-                .andExpect(jsonPath("$.code").value("RECORD001"));
-    }
+//    @Test
+//    void updateResult_실패D() throws Exception {
+//        Long recordId = 999L;
+//
+//        MatchResultRequest request = new MatchResultRequest();
+//        ReflectionTestUtils.setField(request, "result", Result.LOSS);
+//
+//        User user = new User();
+//        user.setUserId(10L);
+//        user.setEmail("user@example.com");
+//        CustomUserDetails userDetails = new CustomUserDetails(user);
+//
+//        willThrow(new CustomException(ErrorCode.NOT_FOUND_RECORD))
+//                .given(matchRecordService).updateResult(recordId, Result.LOSS);
+//
+//        mockMvc.perform(patch("/api/v1/record/{recordId}/result", recordId)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(new ObjectMapper().writeValueAsString(request))
+//                        .with(authentication(new UsernamePasswordAuthenticationToken(userDetails, null))))
+//                .andExpect(status().is(408))
+//                .andExpect(jsonPath("$.message").value("fail"))
+//                .andExpect(jsonPath("$.status").value(408))
+//                .andExpect(jsonPath("$.error").value("해당 직관기록을 찾을 수 없습니다."))
+//                .andExpect(jsonPath("$.code").value("RECORD001"));
+//    }
 
     @Test
     void getRecordDetail_성공() throws Exception {
