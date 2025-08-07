@@ -98,7 +98,6 @@ class UserControllerTest {
     @Test
     void signup_성공() throws Exception {
         SignupRequest request = new SignupRequest();
-        request.setEmail("email@test.com");
         request.setNickname("구단주");
         request.setBaseballTeam(BaseballTeam.LG_TWINS);
 
@@ -119,7 +118,6 @@ class UserControllerTest {
     @Test
     void signup_실패() throws Exception {
         SignupRequest request = new SignupRequest();
-        request.setEmail("email@test.com");
         request.setNickname("중복닉네임");
         request.setBaseballTeam(BaseballTeam.LG_TWINS);
 
