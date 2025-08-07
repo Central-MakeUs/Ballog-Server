@@ -45,6 +45,7 @@ public enum ErrorCode {
     RECORD_NOT_OWNED_DELETE(409, "RECORD002", "본인이 작성한 기록만 삭제 할 수 있습니다."),
 
     RECORD_NOT_OWNED(409, "RECORD003", "본인이 작성한 기록만 접근할 수 있습니다."),
+    ALREADY_RECORDED(408,"RECORD004","이미 해당 경기의 직관 기록이 존재합니다"),
 
     //IMAGE
     FILE_UPLOAD_FAIL(410, "IMAGE001", "사진 업로드 실패입니다."),

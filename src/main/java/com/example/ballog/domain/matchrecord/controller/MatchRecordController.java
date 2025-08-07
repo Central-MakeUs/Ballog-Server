@@ -32,7 +32,8 @@ public class MatchRecordController {
     @Operation(summary = "직관 기록 등록", description = "사용자가 직관 경기 실시간 기록 등록")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
-            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
+            @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND),
+            @ApiErrorResponse(ErrorCode.ALREADY_RECORDED)
     })
     public ResponseEntity<BasicResponse<MatchRecordResponse>> createRecord(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -46,26 +47,6 @@ public class MatchRecordController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(BasicResponse.ofSuccess("직관 기록 등록 성공",response));
-    }
-
-    @PatchMapping("/{recordId}/result")
-    @Operation(summary = "직관 기록 결과 입력", description = "기록 종료 시 경기 결과(WIN, LOSS, DRAW)를 입력")
-    @ApiErrorResponses({
-            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
-            @ApiErrorResponse(ErrorCode.NOT_FOUND_RECORD)
-    })
-    public ResponseEntity<BasicResponse<Void>> updateResult(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("recordId") Long recordId,
-            @RequestBody MatchResultRequest request) {
-
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
-
-        matchRecordService.updateResult(recordId, request.getResult());
-
-        return ResponseEntity.ok(BasicResponse.ofSuccess("경기 결과 입력 성공"));
     }
 
     @GetMapping("/{recordId}")
