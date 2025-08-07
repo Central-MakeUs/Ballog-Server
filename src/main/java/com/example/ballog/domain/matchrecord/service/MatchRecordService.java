@@ -44,6 +44,11 @@ public class MatchRecordService {
         Matches matches = matchesRepository.findById(request.getMatchesId())
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
+
+        if (matchRecordRepository.existsByUserAndMatches(user, matches)) {
+            throw new CustomException(ErrorCode.ALREADY_RECORDED);
+        }
+
         long cnt= matchRecordRepository.countByUser(user);
 
         MatchRecord record = new MatchRecord();
@@ -234,6 +239,7 @@ public class MatchRecordService {
     @Transactional
     public void deleteRecord(Long recordId) {
         MatchRecord record = findById(recordId);
+        emotionRepository.deleteAllByMatchRecord(record);
         matchRecordRepository.delete(record);
     }
 
