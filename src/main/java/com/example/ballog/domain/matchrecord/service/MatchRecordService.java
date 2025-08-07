@@ -234,6 +234,7 @@ public class MatchRecordService {
     @Transactional
     public void deleteRecord(Long recordId) {
         MatchRecord record = findById(recordId);
+        emotionRepository.deleteAllByMatchRecord(record);
         matchRecordRepository.delete(record);
     }
 

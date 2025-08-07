@@ -1,7 +1,7 @@
 package com.example.ballog.domain.login.entity;
 
 public enum BaseballTeam {
-    DOOSAN_BEARS("두산 베어스"),
+    DOOSAN_BEARS("두산 베어스"), 
     LOTTE_GIANTS("롯데 자이언츠"),
     SAMSUNG_LIONS("삼성 라이온즈"),
     KIWOOM_HEROES("키움 히어로즈"),
