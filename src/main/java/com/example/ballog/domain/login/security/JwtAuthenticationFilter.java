@@ -30,6 +30,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+
+        // JWT 검증을 건너뛸 경로
+        if (path.startsWith("/api/v1/auth/login/apple")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+
         String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
