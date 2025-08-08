@@ -169,7 +169,6 @@ public class AppleOAuthService {
 
         return jwt.serialize();
     }
-
     public byte[] getPrivateKey() throws Exception {
         if (appleKeyPath == null || appleKeyPath.isEmpty()) {
             throw new Exception("애플 개인 키가 설정되어 있지 않습니다.");
@@ -187,6 +186,7 @@ public class AppleOAuthService {
 
         return Base64.getDecoder().decode(privateKeyPem);
     }
+
 
 
     public ECPrivateKey getECPrivateKey(byte[] privateKeyBytes) throws Exception {

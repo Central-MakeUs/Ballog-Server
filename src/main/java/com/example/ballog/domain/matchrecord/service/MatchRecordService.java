@@ -240,8 +240,8 @@ public class MatchRecordService {
     public void deleteRecord(Long recordId) {
         MatchRecord record = findById(recordId);
         emotionRepository.deleteAllByMatchRecord(record);
+        imageRepository.deleteAllByMatchRecord(record);
         matchRecordRepository.delete(record);
     }
-
 
 }
