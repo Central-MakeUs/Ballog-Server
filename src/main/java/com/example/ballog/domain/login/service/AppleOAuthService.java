@@ -117,6 +117,7 @@ public class AppleOAuthService {
             email = claimsSet.getStringClaim("email");
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new Exception("API 가져오기 실패");
         }
         return new AppleResponse(userId, accessToken,refreshToken, email);
