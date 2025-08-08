@@ -65,9 +65,9 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 frontedElastic,
                 "https://ballog.shop",
-                "https://ballog-front-web.vercel.app/",
-
+                "https://ballog-front-web.vercel.app/"
         ));
+
         configuration.addAllowedMethod("*");
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

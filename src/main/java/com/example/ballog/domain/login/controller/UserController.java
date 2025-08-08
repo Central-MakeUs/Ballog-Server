@@ -98,31 +98,33 @@ public class UserController {
             @RequestParam(name = "code") String code) {
         try {
             AppleResponse appleResponse = appleOAuthService.getAppleInfo(code);
-            String email = appleResponse.getEmail();
-            String appleSub = appleResponse.getId();
-            User user = userService.findByEmail(email);
+            String email = appleResponse.getEmail();  // email은 null일 수 있음
+            String appleSub = appleResponse.getId(); // providerId 역할
 
-            // 1. 이메일이 있으면 이메일 기반으로 유저 찾기
-            if (email != null) {
-                user = userService.findByEmail(email);
+            if (appleSub == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(BasicResponse.ofFailure("애플 providerId가 없습니다.", HttpStatus.BAD_REQUEST));
             }
 
-            // 2. 이메일이 없으면 애플 sub로 유저 찾기 (이전에 로그인했던 유저)
-            if (user == null && appleSub != null) {
-                user = userService.findByAppleProviderId(appleSub);
-            }
+            // 1. providerId 기준으로 유저 찾기
+            User user = userService.findByAppleProviderId(appleSub);
 
-            if (user == null) { //회원가입
+            // 2. 유저가 없으면 회원가입
+            if (user == null) {
                 User newUser = new User();
-                newUser.setEmail(email);
+                newUser.setEmail(email); // email이 null일 수도 있음
+                // providerId를 저장할 수 있는 구조가 User 엔티티에 있으면 같이 저장하거나,
+                // 별도의 OAuthToken에서 관리하므로 user signup 후 토큰 저장 처리
 
                 User savedUser = userService.signup(newUser);
 
+                // 애플 OAuthToken 저장 (providerId, accessToken 등)
                 appleOAuthService.saveAppleToken(savedUser, appleResponse);
 
                 return userService.processLogin(savedUser, true);
             }
 
+            // 3. 유저가 있으면 토큰만 업데이트 후 로그인 처리
             appleOAuthService.saveAppleToken(user, appleResponse);
             return userService.processLogin(user, false);
 
@@ -132,6 +134,49 @@ public class UserController {
                     .body(BasicResponse.ofFailure("애플 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
     }
+
+
+
+//    @PostMapping("/auth/login/apple") //이메일 기반 회원가입 or 로그인
+//    @Operation(summary = "애플 회원가입 및 로그인", description = "애플 회원가입 및 로그인 처리")
+//    public ResponseEntity<BasicResponse<Object>> appleSignup(
+//            @RequestParam(name = "code") String code) {
+//        try {
+//            AppleResponse appleResponse = appleOAuthService.getAppleInfo(code);
+//            String email = appleResponse.getEmail();
+//            String appleSub = appleResponse.getId();
+//            User user = userService.findByEmail(email);
+//
+//            // 1. 이메일이 있으면 이메일 기반으로 유저 찾기
+//            if (email != null) {
+//                user = userService.findByEmail(email);
+//            }
+//
+//            // 2. 이메일이 없으면 애플 sub로 유저 찾기 (이전에 로그인했던 유저)
+//            if (user == null && appleSub != null) {
+//                user = userService.findByAppleProviderId(appleSub);
+//            }
+//
+//            if (user == null) { //회원가입
+//                User newUser = new User();
+//                newUser.setEmail(email);
+//
+//                User savedUser = userService.signup(newUser);
+//
+//                appleOAuthService.saveAppleToken(savedUser, appleResponse);
+//
+//                return userService.processLogin(savedUser, true);
+//            }
+//
+//            appleOAuthService.saveAppleToken(user, appleResponse);
+//            return userService.processLogin(user, false);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(BasicResponse.ofFailure("애플 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
+//        }
+//    }
 
     @PostMapping("/auth/signup")
     @Operation(summary = "회원가입시 추가 정보 저장")
