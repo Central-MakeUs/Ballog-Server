@@ -143,7 +143,7 @@ class UserControllerTest {
 //                .andExpect(status().isInternalServerError())
 //                .andExpect(jsonPath("$.message").value("fail"))
 //                .andExpect(jsonPath("$.status").value(500))
-//                .andExpect(jsonPath("$.message").value("애플 로그인 처리 중 오류 발생"));
+//                .andExpect(jsonPath("$.success").value("애플 로그인 처리 중 오류 발생"));
 //    }
 
     @Test
