@@ -53,6 +53,7 @@ public class SecurityConfig {
             "/error",
             "/api/v1/**",
             "/favicon.ico", 
+            "https://ballog-front-web.vercel.app/",
             "https://appleid.apple.com/**"
     };
 
