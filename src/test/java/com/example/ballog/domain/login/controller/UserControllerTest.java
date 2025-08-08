@@ -1,7 +1,9 @@
 package com.example.ballog.domain.login.controller;
 
 import com.example.ballog.domain.login.dto.request.SignupRequest;
+import com.example.ballog.domain.login.dto.request.TermAgreeRequest;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
+import com.example.ballog.domain.login.dto.response.AppleResponse;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.entity.Role;
@@ -29,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -62,9 +65,8 @@ class UserControllerTest {
     private AppleOAuthService appleOAuthService;
 
 
-
     @Test
-    void kakaoLogin_성공() throws Exception {
+    void kakaoLogin_성공() throws Exception { //회원가입
         String accessToken = "accessToken";
         String refreshToken = "refreshToken";
 
@@ -74,11 +76,11 @@ class UserControllerTest {
         User savedUser = new User();
         savedUser.setEmail("test@kakao.com");
 
-        given(kakaoOAuthService.getKakaoUser(accessToken)).willReturn(kakaoUser);
-        given(userService.findByEmail("test@kakao.com")).willReturn(null);
-        given(userService.signup(any())).willReturn(savedUser);
-        given(userService.processLogin(savedUser, true)).willReturn(
-                ResponseEntity.ok(BasicResponse.ofSuccess("회원가입 성공")));
+        given(kakaoOAuthService.getKakaoUser(anyString())).willReturn(kakaoUser);
+        given(userService.findByEmail(anyString())).willReturn(null);
+        given(userService.signup(any(User.class))).willReturn(savedUser);
+        given(userService.processLogin(any(User.class), anyBoolean()))
+                .willReturn(ResponseEntity.ok(BasicResponse.ofSuccess("회원가입 성공")));
 
         mockMvc.perform(post("/api/v1/auth/login/kakao")
                         .header("Authorization", "Bearer " + accessToken)
@@ -105,11 +107,55 @@ class UserControllerTest {
     }
 
 
+//    @Test
+//    void appleSignup_성공() throws Exception { //로그인
+//        String code = "valid_code";
+//        String email = "test@example.com";
+//        String appleSub = "apple_sub_123";
+//
+//        AppleResponse appleResponse = new AppleResponse();
+//        appleResponse.setEmail(email);
+//        appleResponse.setId(appleSub);
+//
+//        User existingUser = new User();
+//        existingUser.setEmail(email);
+//
+//        given(appleOAuthService.getAppleInfo(code)).willReturn(appleResponse);
+//        given(userService.findByEmail(email)).willReturn(existingUser);
+//        willDoNothing().given(appleOAuthService).saveAppleToken(existingUser, appleResponse);
+//        given(userService.processLogin(existingUser, false))
+//                .willReturn(ResponseEntity.ok(BasicResponse.ofSuccess("로그인 성공")));
+//
+//        mockMvc.perform(post("/api/v1/auth/login/apple")
+//                        .param("code", code))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value("로그인 성공"));
+//    }
+//
+//    @Test
+//    void appleSignup_실패() throws Exception {
+//        String code = "invalid_code";
+//
+//        given(appleOAuthService.getAppleInfo(code)).willThrow(new RuntimeException("토큰 오류"));
+//
+//        mockMvc.perform(post("/api/v1/auth/login/apple")
+//                        .param("code", code))
+//                .andExpect(status().isInternalServerError())
+//                .andExpect(jsonPath("$.message").value("fail"))
+//                .andExpect(jsonPath("$.status").value(500))
+//                .andExpect(jsonPath("$.success").value("애플 로그인 처리 중 오류 발생"));
+//    }
+
     @Test
     void signup_성공() throws Exception {
+        TermAgreeRequest termAgreeRequest = new TermAgreeRequest();
+        termAgreeRequest.setPrivacyAgree(true);
+        termAgreeRequest.setServiceAgree(true);
+
         SignupRequest request = new SignupRequest();
         request.setNickname("구단주");
         request.setBaseballTeam(BaseballTeam.LG_TWINS);
+        request.setTermAgree(termAgreeRequest);
 
         User user = new User();
         user.setEmail("email@test.com");
@@ -118,6 +164,8 @@ class UserControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(userDetails, null));
 
+        doNothing().when(userService).signup(any(User.class), any(SignupRequest.class));
+
         mockMvc.perform(post("/api/v1/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -125,31 +173,39 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.success").value("회원가입 완료"));
     }
 
-//    @Test
-//    void signup_실패() throws Exception {
-//        SignupRequest request = new SignupRequest();
-//        request.setNickname("중복닉네임");
-//        request.setBaseballTeam(BaseballTeam.LG_TWINS);
-//
-//        doThrow(new CustomException(ErrorCode.DUPLICATE_NICKNAME))
-//                .when(userService).updateUser(any(User.class));
-//
-//        User user = new User();
-//        user.setEmail("email@test.com");
-//        CustomUserDetails userDetails = new CustomUserDetails(user);
-//        SecurityContextHolder.getContext().setAuthentication(
-//                new UsernamePasswordAuthenticationToken(userDetails, null)
-//        );
-//
-//        mockMvc.perform(post("/api/v1/auth/signup")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(request)))
-//                .andExpect(jsonPath("$.message").value("fail"))
-//                .andExpect(jsonPath("$.status").value(409))
-//                .andExpect(jsonPath("$.error").value(ErrorCode.DUPLICATE_NICKNAME.getMessage()))
-//                .andExpect(jsonPath("$.code").value(ErrorCode.DUPLICATE_NICKNAME.getCode()));
-//
-//    }
+
+    @Test
+    void signup_실패() throws Exception {
+        TermAgreeRequest termAgreeRequest = new TermAgreeRequest();
+        termAgreeRequest.setPrivacyAgree(true);
+        termAgreeRequest.setServiceAgree(true);
+
+        SignupRequest request = new SignupRequest();
+        request.setNickname("중복닉네임");
+        request.setBaseballTeam(BaseballTeam.LG_TWINS);
+        request.setTermAgree(termAgreeRequest);
+
+        doThrow(new CustomException(ErrorCode.DUPLICATE_NICKNAME))
+                .when(userService).signup(any(User.class), any(SignupRequest.class));
+
+        User user = new User();
+        user.setEmail("email@test.com");
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userDetails, null)
+        );
+
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("fail"))
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value(ErrorCode.DUPLICATE_NICKNAME.getMessage()))
+                .andExpect(jsonPath("$.code").value(ErrorCode.DUPLICATE_NICKNAME.getCode()));
+    }
+
+
 
 
     @Test
@@ -327,15 +383,15 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.role").value(user.getRole().name()));
     }
 
-//    @Test
-//    void getUserInfo_실패() throws Exception {
-//        SecurityContextHolder.clearContext();
-//
-//        mockMvc.perform(get("/api/v1/mypage/user"))
-//                .andExpect(status().is(404))
-//                .andExpect(jsonPath("$.message").value("fail"))
-//                .andExpect(jsonPath("$.status").value(404))
-//                .andExpect(jsonPath("$.error").value(ErrorCode.UNAUTHORIZED.getMessage()))
-//                .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.getCode()));
-//    }
+    @Test
+    void getUserInfo_실패() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/v1/mypage/user"))
+                .andExpect(status().is(404))
+                .andExpect(jsonPath("$.message").value("fail"))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value(ErrorCode.UNAUTHORIZED.getMessage()))
+                .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.getCode()));
+    }
 }

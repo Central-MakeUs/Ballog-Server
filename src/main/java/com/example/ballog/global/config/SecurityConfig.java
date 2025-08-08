@@ -67,6 +67,7 @@ public class SecurityConfig {
                 "https://ballog.shop",
                 "https://ballog-front-web.vercel.app/"
         ));
+
         configuration.addAllowedMethod("*");
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

@@ -36,6 +36,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
@@ -168,6 +169,24 @@ public class AppleOAuthService {
         return jwt.serialize();
     }
 
+    public byte[] getPrivateKey() throws Exception {
+        if (appleKeyPath == null || appleKeyPath.isEmpty()) {
+            throw new Exception("애플 개인 키가 설정되어 있지 않습니다.");
+        }
+
+        String privateKeyPem = appleKeyPath;
+        if (privateKeyPem.startsWith("\"") && privateKeyPem.endsWith("\"")) {
+            privateKeyPem = privateKeyPem.substring(1, privateKeyPem.length() - 1);
+        }
+
+        privateKeyPem = privateKeyPem
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replaceAll("\\s+", ""); // 공백 제거
+
+        return Base64.getDecoder().decode(privateKeyPem);
+    }
+
 
     public ECPrivateKey getECPrivateKey(byte[] privateKeyBytes) throws Exception {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
@@ -175,50 +194,6 @@ public class AppleOAuthService {
         return (ECPrivateKey) kf.generatePrivate(keySpec);
     }
 
-
-    private byte[] getPrivateKey() throws Exception {
-        byte[] content = null;
-        File file = null;
-
-        URL res = getClass().getResource(appleKeyPath);
-
-        if ("jar".equals(res.getProtocol())) {
-            try {
-                InputStream input = getClass().getResourceAsStream(appleKeyPath);
-                file = File.createTempFile("tempfile", ".tmp");
-                OutputStream out = new FileOutputStream(file);
-
-                int read;
-                byte[] bytes = new byte[1024];
-
-                while ((read = input.read(bytes)) != -1) {
-                    out.write(bytes, 0, read);
-                }
-
-                out.close();
-                file.deleteOnExit();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        } else {
-            file = new File(res.getFile());
-        }
-
-        if (file.exists()) {
-            try (FileReader keyReader = new FileReader(file);
-                 PemReader pemReader = new PemReader(keyReader))
-            {
-                PemObject pemObject = pemReader.readPemObject();
-                content = pemObject.getContent();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            throw new Exception("파일 " + file + " 을 찾을 수 없습니다.");
-        }
-
-        return content;
-    }
 
     //애플 로그인 연결 끊기
     public void logoutFromApple(String refreshToken) {
