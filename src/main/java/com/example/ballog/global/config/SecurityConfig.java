@@ -53,7 +53,6 @@ public class SecurityConfig {
             "/error",
             "/api/v1/**",
             "/favicon.ico", 
-            "https://ballog-front-web.vercel.app/",
             "https://appleid.apple.com/**"
     };
 
@@ -65,7 +64,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 frontedElastic,
-                "https://ballog.shop"
+                "https://ballog.shop",
+                "https://ballog-front-web.vercel.app/",
 
         ));
         configuration.addAllowedMethod("*");
