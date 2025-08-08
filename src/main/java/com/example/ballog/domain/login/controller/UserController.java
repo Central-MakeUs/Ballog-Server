@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
@@ -130,6 +132,7 @@ public class UserController {
 
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("애플 로그인 처리 중 오류 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(BasicResponse.ofFailure("애플 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
         }
