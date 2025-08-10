@@ -101,17 +101,12 @@ public class UserService {
     }
 
 
-    public void updateUser(User user) {
-        userRepository.save(user);
-    }
-
     public ResponseEntity<BasicResponse<Object>> processLogin(User user, boolean isSignup) {
-        String refreshToken = tokenService.getRefreshToken(user);
 
-        if (refreshToken == null || refreshToken.isEmpty()) { //새로 회원가입하는 유저 or 로그아웃하고 로그인하는 유저
-            refreshToken = tokenService.createRefreshToken(user);
-            tokenService.saveRefreshToken(user, refreshToken);
-        }
+
+        String refreshToken = tokenService.createRefreshToken(user); //회원가입 -> 뒤로가기 -> 재로그인경우를 고려해 무조건 새로 발급받은걸로 저장
+        tokenService.saveRefreshToken(user, refreshToken);
+
 
         String accessToken = tokenService.renewAccessToken(refreshToken);
 
