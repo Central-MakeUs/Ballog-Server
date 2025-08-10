@@ -51,6 +51,7 @@ public enum ErrorCode {
     FILE_UPLOAD_FAIL(410, "IMAGE001", "사진 업로드 실패입니다."),
     INVALID_FILE_EXTENSION(411,"FILE_001", "유효하지 않은 파일 형식입니다."),
     UNSUPPORTED_FILE_EXTENSION(411,"FILE_002", "지원하지 않는 파일 확장자입니다."),
+    S3_DELETE_FAILED(415, "IMAGE002", "AWS S3 이미지 파일 삭제에 실패했습니다."),
     INVALID_URL(412, "URL001", "유효하지 않은 URL입니다."),
 
     //ALERT
