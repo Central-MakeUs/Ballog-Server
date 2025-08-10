@@ -79,5 +79,24 @@ public class S3Service {
     public String getAccessibleUrl(String fileName) {
         return "https://" + bucket + ".s3." + region + ".amazonaws.com/images/" + fileName;
     }
+
+    public void deleteFileFromS3(String imageUrl) { //s3 버킷에 올라간 이미지 삭제
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_URL);
+        }
+
+        String fileName = extractFileNameFromUrl(imageUrl);
+
+        String s3Key = "images/" + fileName;
+
+        try {
+            amazonS3.deleteObject(bucket, s3Key);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.S3_DELETE_FAILED); // 필요 시 ErrorCode에 정의
+        }
+    }
+
+
+
 }
 

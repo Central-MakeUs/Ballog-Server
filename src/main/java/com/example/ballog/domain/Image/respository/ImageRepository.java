@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface ImageRepository  extends JpaRepository<Image, Long> {
     Optional<Image> findFirstByMatchRecordOrderByCreatedAtAsc(MatchRecord matchRecord);
     List<Image> findByMatchRecord(MatchRecord matchRecord);
+    List<Image> findAllByMatchRecord(MatchRecord matchRecord);
     @Modifying
     @Query("delete from Image i where i.matchRecord.user.userId = :userId")
     void deleteAllByUserUserId(@Param("userId") Long userId);

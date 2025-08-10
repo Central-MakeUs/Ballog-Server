@@ -1,6 +1,8 @@
 package com.example.ballog.domain.matchrecord.service;
 
+import com.example.ballog.domain.Image.entity.Image;
 import com.example.ballog.domain.Image.respository.ImageRepository;
+import com.example.ballog.domain.Image.service.S3Service;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
@@ -37,6 +39,7 @@ public class MatchRecordService {
     private final MatchRecordRepository matchRecordRepository;
     private final EmotionRepository emotionRepository;
     private final ImageRepository imageRepository;
+    private final S3Service s3Service;
 
 
     @Transactional
@@ -239,6 +242,13 @@ public class MatchRecordService {
     @Transactional
     public void deleteRecord(Long recordId) {
         MatchRecord record = findById(recordId);
+
+        List<Image> images = imageRepository.findAllByMatchRecord(record);
+
+        for (Image image : images) {
+            s3Service.deleteFileFromS3(image.getImageUrl());
+        }
+
         emotionRepository.deleteAllByMatchRecord(record);
         imageRepository.deleteAllByMatchRecord(record);
         matchRecordRepository.delete(record);
