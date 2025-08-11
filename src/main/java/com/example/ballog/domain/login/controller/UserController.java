@@ -139,48 +139,6 @@ public class UserController {
     }
 
 
-
-//    @PostMapping("/auth/login/apple") //이메일 기반 회원가입 or 로그인
-//    @Operation(summary = "애플 회원가입 및 로그인", description = "애플 회원가입 및 로그인 처리")
-//    public ResponseEntity<BasicResponse<Object>> appleSignup(
-//            @RequestParam(name = "code") String code) {
-//        try {
-//            AppleResponse appleResponse = appleOAuthService.getAppleInfo(code);
-//            String email = appleResponse.getEmail();
-//            String appleSub = appleResponse.getId();
-//            User user = userService.findByEmail(email);
-//
-//            // 1. 이메일이 있으면 이메일 기반으로 유저 찾기
-//            if (email != null) {
-//                user = userService.findByEmail(email);
-//            }
-//
-//            // 2. 이메일이 없으면 애플 sub로 유저 찾기 (이전에 로그인했던 유저)
-//            if (user == null && appleSub != null) {
-//                user = userService.findByAppleProviderId(appleSub);
-//            }
-//
-//            if (user == null) { //회원가입
-//                User newUser = new User();
-//                newUser.setEmail(email);
-//
-//                User savedUser = userService.signup(newUser);
-//
-//                appleOAuthService.saveAppleToken(savedUser, appleResponse);
-//
-//                return userService.processLogin(savedUser, true);
-//            }
-//
-//            appleOAuthService.saveAppleToken(user, appleResponse);
-//            return userService.processLogin(user, false);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(BasicResponse.ofFailure("애플 로그인 처리 중 오류 발생", HttpStatus.INTERNAL_SERVER_ERROR));
-//        }
-//    }
-
     @PostMapping("/auth/signup")
     @Operation(summary = "회원가입시 추가 정보 저장")
     @ApiErrorResponses({
