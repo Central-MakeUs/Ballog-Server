@@ -26,7 +26,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -40,6 +39,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+
 
 
 @SpringBootTest
@@ -107,44 +108,46 @@ class UserControllerTest {
     }
 
 
-//    @Test
-//    void appleSignup_성공() throws Exception { //로그인
-//        String code = "valid_code";
-//        String email = "test@example.com";
-//        String appleSub = "apple_sub_123";
-//
-//        AppleResponse appleResponse = new AppleResponse();
-//        appleResponse.setEmail(email);
-//        appleResponse.setId(appleSub);
-//
-//        User existingUser = new User();
-//        existingUser.setEmail(email);
-//
-//        given(appleOAuthService.getAppleInfo(code)).willReturn(appleResponse);
-//        given(userService.findByEmail(email)).willReturn(existingUser);
-//        willDoNothing().given(appleOAuthService).saveAppleToken(existingUser, appleResponse);
-//        given(userService.processLogin(existingUser, false))
-//                .willReturn(ResponseEntity.ok(BasicResponse.ofSuccess("로그인 성공")));
-//
-//        mockMvc.perform(post("/api/v1/auth/login/apple")
-//                        .param("code", code))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.success").value("로그인 성공"));
-//    }
-//
-//    @Test
-//    void appleSignup_실패() throws Exception {
-//        String code = "invalid_code";
-//
-//        given(appleOAuthService.getAppleInfo(code)).willThrow(new RuntimeException("토큰 오류"));
-//
-//        mockMvc.perform(post("/api/v1/auth/login/apple")
-//                        .param("code", code))
-//                .andExpect(status().isInternalServerError())
-//                .andExpect(jsonPath("$.message").value("fail"))
-//                .andExpect(jsonPath("$.status").value(500))
-//                .andExpect(jsonPath("$.success").value("애플 로그인 처리 중 오류 발생"));
-//    }
+    @Test
+    void appleSignup_성공() throws Exception { //로그인
+        String code = "valid_code";
+        String email = "test@example.com";
+        String appleSub = "apple_sub_123";
+
+        AppleResponse appleResponse = new AppleResponse();
+        appleResponse.setEmail(email);
+        appleResponse.setId(appleSub);
+
+        User existingUser = new User();
+        existingUser.setEmail(email);
+
+        given(appleOAuthService.getAppleInfo(code)).willReturn(appleResponse);
+        given(userService.findByAppleProviderId(appleSub)).willReturn(existingUser);
+        willDoNothing().given(appleOAuthService).saveAppleToken(existingUser, appleResponse);
+        given(userService.processLogin(any(User.class), anyBoolean()))
+                .willReturn(ResponseEntity.ok(BasicResponse.ofSuccess("로그인 성공")));
+
+        mockMvc.perform(post("/api/v1/auth/login/apple")
+                        .param("code", code)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value("로그인 성공"));
+    }
+
+    @Test
+    void appleSignup_실패() throws Exception {
+        String code = "invalid_code";
+
+        given(appleOAuthService.getAppleInfo(code)).willThrow(new RuntimeException("토큰 오류"));
+
+        mockMvc.perform(post("/api/v1/auth/login/apple")
+                        .param("code", code))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("fail"))
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.success").value("애플 로그인 처리 중 오류 발생"));
+    }
 
     @Test
     void signup_성공() throws Exception {
