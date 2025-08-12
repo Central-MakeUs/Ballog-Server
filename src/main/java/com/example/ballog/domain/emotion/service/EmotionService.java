@@ -12,6 +12,8 @@ import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -46,6 +48,29 @@ public class EmotionService {
         return getEmotionRatio(request.getMatchRecordId(), currentUserId);
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public EmotionResponse createEmotionNew(EmotionEnrollRequest request, Long currentUserId) {
+
+        MatchRecord matchRecord = matchRecordRepository.findById(request.getMatchRecordId())
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));
+
+        if (!matchRecord.getUser().getUserId().equals(currentUserId)) {
+            throw new CustomException(ErrorCode.RECORD_NOT_OWNED);
+        }
+
+        Matches matches = matchRecord.getMatches();
+
+        Emotion emotion = new Emotion();
+        emotion.setMatchRecord(matchRecord);
+        emotion.setMatches(matches);
+        emotion.setUserId(currentUserId);
+        emotion.setEmotionType(request.getEmotionType());
+        emotion.setCreatedAt(LocalDateTime.now());
+
+        emotionRepository.saveAndFlush(emotion);
+
+        return getEmotionRatio(request.getMatchRecordId(), currentUserId);
+    }
 
 
     public EmotionResponse getEmotionRatio(Long recordId, Long currentUserId) {
