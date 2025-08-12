@@ -36,9 +36,7 @@ public class EmotionController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EmotionEnrollRequest request) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        validateUser(userDetails);
 
         EmotionResponse response = emotionService.createEmotion(request, userDetails.getUser().getUserId());
 
@@ -57,9 +55,7 @@ public class EmotionController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EmotionEnrollRequest request) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        validateUser(userDetails);
 
         // 연타 가능 + 모든 요청 DB 저장되게 처리
         EmotionResponse response = emotionService.createEmotionNew(
@@ -83,13 +79,17 @@ public class EmotionController {
             @PathVariable("recordId") Long recordId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        validateUser(userDetails);
 
         EmotionResponse response = emotionService.getEmotionRatio(recordId, userDetails.getUser().getUserId());
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("감정 비율 조회 성공",response));
+    }
+
+    private void validateUser(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
     }
 
 }
