@@ -44,13 +44,7 @@ public class MatchesController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody MatchesRequest request) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
-
-        if (userDetails.getUser().getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        validateAdmin(userDetails);
 
         MatchesWithResponse result = matchesService.createMatches(request);
         matchAlertSetupService.scheduleUserAlertsForMatch(result.getMatches());
@@ -83,14 +77,14 @@ public class MatchesController {
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.MATCH_NOT_FOUND)
     })
-    public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId")  Long matchId) {
+    public ResponseEntity<BasicResponse<MatchesResponse>> getMatchDetail(@PathVariable("matchId") Long matchId) {
         MatchesResponse response = matchesService.getMatchDetail(matchId);
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("경기 상세 조회 성공", response)
         );
     }
 
-    @PatchMapping("{matchId}")
+    @PatchMapping("/{matchId}")
     @Operation(summary = "경기일정 수정", description = "관리자만이 경기일정을 수정")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
@@ -103,22 +97,16 @@ public class MatchesController {
             @PathVariable("matchId") Long matchId,
             @RequestBody MatchesRequest request) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
-
-        if (userDetails.getUser().getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        validateAdmin(userDetails);
 
         MatchesResponse updatedMatch = matchesService.updateMatch(matchId, request);
 
         return ResponseEntity.ok(
-                BasicResponse.ofSuccess("경기일정 수정 성공",updatedMatch)
+                BasicResponse.ofSuccess("경기일정 수정 성공", updatedMatch)
         );
     }
 
-    @DeleteMapping("{matchId}")
+    @DeleteMapping("/{matchId}")
     @Operation(summary = "경기일정 삭제", description = "관리자만이 경기일정을 삭제")
     @ApiErrorResponses({
             @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
@@ -127,21 +115,25 @@ public class MatchesController {
     })
     public ResponseEntity<BasicResponse<String>> deleteMatch(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("matchId")  Long matchId) {
+            @PathVariable("matchId") Long matchId) {
 
-        if (userDetails == null) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
-
-        if (userDetails.getUser().getRole() != Role.ADMIN) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        validateAdmin(userDetails);
 
         matchesService.deleteMatch(matchId);
 
         return ResponseEntity.ok(
                 BasicResponse.ofSuccess("경기일정 삭제 성공")
         );
+    }
+
+    // 사용자 인증 및 관리자 권한 검증
+    private void validateAdmin(CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+        if (userDetails.getUser().getRole() != Role.ADMIN) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
     }
 
 }
