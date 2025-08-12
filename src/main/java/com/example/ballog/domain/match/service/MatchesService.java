@@ -30,26 +30,10 @@ public class MatchesService {
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
 
-    public MatchesWithResponse createMatches(MatchesRequest request){
-        Matches match = new Matches();
-        match.setMatchesDate(request.getMatchesDate());
-        match.setMatchesTime(request.getMatchesTime());
-        match.setHomeTeam(request.getHomeTeam());
-        match.setAwayTeam(request.getAwayTeam());
-        match.setStadium(request.getStadium());
-        match.setMatchesResult(request.getMatchesResult());
-
+    public MatchesWithResponse createMatches(MatchesRequest request) {
+        Matches match = buildMatchFromRequest(request);
         Matches saved = matchesRepository.save(match);
-        MatchesResponse response = new MatchesResponse(
-                saved.getMatchesId(),
-                saved.getMatchesDate(),
-                saved.getMatchesTime(),
-                saved.getHomeTeam(),
-                saved.getAwayTeam(),
-                saved.getStadium(),
-                saved.getMatchesResult()
-        );
-
+        MatchesResponse response = MatchesResponse.from(saved);
         return new MatchesWithResponse(saved, response);
     }
 
@@ -62,9 +46,11 @@ public class MatchesService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 모든 경기 일정을 날짜별로 그룹화하여 조회
+     */
     public Map<String, List<MatchesGroupedResponse>> getAllMatchesGroupedByDate() {
         List<Matches> matchesList = matchesRepository.findAll();
-
         return matchesList.stream()
                 .collect(Collectors.groupingBy(
                         match -> match.getMatchesDate().toString(),
@@ -73,44 +59,18 @@ public class MatchesService {
                 ));
     }
 
-
     public MatchesResponse getMatchDetail(Long matchId) {
-        Matches match = matchesRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        Matches match = findMatchById(matchId);
         return MatchesResponse.from(match);
     }
 
     @Transactional
     public MatchesResponse updateMatch(Long matchId, MatchesRequest request) {
-        Matches match = matchesRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        Matches match = findMatchById(matchId);
 
-        if (request.getMatchesDate() != null) {
-            match.setMatchesDate(request.getMatchesDate());
-        }
+        updateMatchFields(match, request);
 
-        if (request.getMatchesTime() != null) {
-            match.setMatchesTime(request.getMatchesTime());
-        }
-
-        if (request.getHomeTeam() != null) {
-            match.setHomeTeam(request.getHomeTeam());
-        }
-
-        if (request.getAwayTeam() != null) {
-            match.setAwayTeam(request.getAwayTeam());
-        }
-
-        if (request.getStadium() != null) {
-            match.setStadium(request.getStadium());
-        }
-
-        boolean resultChanged = false;
-        if (request.getMatchesResult() != null &&
-                !Objects.equals(match.getMatchesResult(), request.getMatchesResult())) {
-            resultChanged = true;
-            match.setMatchesResult(request.getMatchesResult());
-        }
+        boolean resultChanged = isMatchResultChanged(match, request);
 
         if (resultChanged) {
             updateMatchRecordsResult(match);
@@ -119,6 +79,56 @@ public class MatchesService {
         return MatchesResponse.from(matchesRepository.save(match));
     }
 
+    public void deleteMatch(Long matchId) {
+        Matches match = findMatchById(matchId);
+        matchesRepository.delete(match);
+    }
+
+    private Matches findMatchById(Long matchId) {
+        return matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+    }
+
+    private Matches buildMatchFromRequest(MatchesRequest request) {
+        Matches match = new Matches();
+        match.setMatchesDate(request.getMatchesDate());
+        match.setMatchesTime(request.getMatchesTime());
+        match.setHomeTeam(request.getHomeTeam());
+        match.setAwayTeam(request.getAwayTeam());
+        match.setStadium(request.getStadium());
+        match.setMatchesResult(request.getMatchesResult());
+        return match;
+    }
+
+    private void updateMatchFields(Matches match, MatchesRequest request) {
+        if (request.getMatchesDate() != null) {
+            match.setMatchesDate(request.getMatchesDate());
+        }
+        if (request.getMatchesTime() != null) {
+            match.setMatchesTime(request.getMatchesTime());
+        }
+        if (request.getHomeTeam() != null) {
+            match.setHomeTeam(request.getHomeTeam());
+        }
+        if (request.getAwayTeam() != null) {
+            match.setAwayTeam(request.getAwayTeam());
+        }
+        if (request.getStadium() != null) {
+            match.setStadium(request.getStadium());
+        }
+        if (request.getMatchesResult() != null) {
+            match.setMatchesResult(request.getMatchesResult());
+        }
+    }
+
+    private boolean isMatchResultChanged(Matches match, MatchesRequest request) {
+        return request.getMatchesResult() != null &&
+                !Objects.equals(match.getMatchesResult(), request.getMatchesResult());
+    }
+
+    /**
+     * 매치 결과 변경 시 유저가 작성한 해당 경기 기록 결과 자동 업데이트
+     */
     private void updateMatchRecordsResult(Matches match) {
         List<MatchRecord> records = matchRecordRepository.findAllByMatches_MatchesId(match.getMatchesId());
 
@@ -134,6 +144,9 @@ public class MatchesService {
         matchRecordRepository.saveAll(records);
     }
 
+    /**
+     * 경기 결과 문자열을 분석해 해당 팀의 결과(WIN, LOSS, DRAW) 판단
+     */
     private Result determineResult(String matchResult, BaseballTeam homeTeam, BaseballTeam awayTeam, BaseballTeam userTeam) {
         String[] scores = matchResult.split(":");
         if (scores.length != 2) {
@@ -151,14 +164,6 @@ public class MatchesService {
         boolean userWon = (userIsHome && homeScore > awayScore) || (!userIsHome && awayScore > homeScore);
 
         return userWon ? Result.WIN : Result.LOSS;
-    }
-
-
-    public void deleteMatch(Long matchId) {
-        Matches match = matchesRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
-
-        matchesRepository.delete(match);
     }
 
 }
