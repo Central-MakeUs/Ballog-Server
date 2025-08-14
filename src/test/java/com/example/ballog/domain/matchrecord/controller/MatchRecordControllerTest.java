@@ -247,12 +247,7 @@ class MatchRecordControllerTest {
         user.setUserId(100L);
         user.setEmail("user@example.com");
 
-        MatchRecord matchRecord = new MatchRecord();
-        matchRecord.setMatchrecordId(recordId);
-        matchRecord.setUser(user);
-
-        given(matchRecordService.findById(recordId)).willReturn(matchRecord);
-        willDoNothing().given(matchRecordService).deleteRecord(recordId);
+        willDoNothing().given(matchRecordService).deleteRecord(recordId, user);
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
@@ -267,23 +262,18 @@ class MatchRecordControllerTest {
     void deleteRecord_실패() throws Exception {
         Long recordId = 1L;
 
-        User actualOwner = new User();
-        actualOwner.setUserId(100L);
-
         User differentUser = new User();
         differentUser.setUserId(200L);
 
-        MatchRecord matchRecord = new MatchRecord();
-        matchRecord.setMatchrecordId(recordId);
-        matchRecord.setUser(actualOwner);
-
-        given(matchRecordService.findById(recordId)).willReturn(matchRecord);
-
         CustomUserDetails userDetails = new CustomUserDetails(differentUser);
+
+        willThrow(new CustomException(ErrorCode.RECORD_NOT_OWNED_DELETE))
+                .given(matchRecordService)
+                .deleteRecord(recordId, differentUser);
 
         mockMvc.perform(delete("/api/v1/record/{recordId}", recordId)
                         .with(authentication(new UsernamePasswordAuthenticationToken(userDetails, null))))
-                .andExpect(status().is(409))
+                .andExpect(status().isConflict()) // 409
                 .andExpect(jsonPath("$.message").value("fail"))
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.error").value("본인이 작성한 기록만 삭제 할 수 있습니다."))
