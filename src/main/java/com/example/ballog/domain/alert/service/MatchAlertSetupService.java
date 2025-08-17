@@ -1,5 +1,7 @@
 package com.example.ballog.domain.alert.service;
 
+import com.example.ballog.domain.alert.entity.Alert;
+import com.example.ballog.domain.alert.repository.AlertRepository;
 import com.example.ballog.domain.alert.scheduler.FcmSchedulerService;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
@@ -17,6 +19,7 @@ public class MatchAlertSetupService {
 
     private final UserRepository userRepository;
     private final FcmSchedulerService schedulerService;
+    private final AlertRepository alertRepository;
 
     public void scheduleUserAlertsForMatch(Matches match) {
         List<User> allUsers = userRepository.findAll();
@@ -26,12 +29,21 @@ public class MatchAlertSetupService {
             if (userTeam == null || userTeam == BaseballTeam.NONE)
                 continue;
 
-            if (userTeam.equals(match.getHomeTeam()) || userTeam.equals(match.getAwayTeam())) {
-                LocalDateTime matchDateTime = LocalDateTime.of(match.getMatchesDate(), match.getMatchesTime());
+            Alert alert = alertRepository.findByUser(user).orElse(null);
+            if (alert == null) {
+                continue;
+            }
 
+            LocalDateTime matchDateTime = LocalDateTime.of(match.getMatchesDate(), match.getMatchesTime());
+
+            // start_alert가 true일 경우만 경기 시작 10분 전 알림 등록
+            if (Boolean.TRUE.equals(alert.getStartAlert())) {
                 LocalDateTime tenMinutesBefore = matchDateTime.minusMinutes(10);
                 schedulerService.scheduleAlertJob(user, match, "start_alert", tenMinutesBefore);
+            }
 
+            // in_game_alert가 true일 경우만 경기 시작 1시간 후 알림 등록
+            if (Boolean.TRUE.equals(alert.getInGameAlert())) {
                 LocalDateTime oneHourLater = matchDateTime.plusHours(1);
                 schedulerService.scheduleAlertJob(user, match, "in_game_alert", oneHourLater);
             }
