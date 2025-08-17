@@ -18,6 +18,7 @@ import java.util.List;
 public class MatchAlertSetupService {
 
     private final FcmSchedulerService schedulerService;
+    private final AlertRepository alertRepository;
 
     /**
      * 경기 등록 시 모든 알림 Job 등록
@@ -25,14 +26,26 @@ public class MatchAlertSetupService {
     public void scheduleUserAlertsForMatch(Matches match) {
         LocalDateTime matchDateTime = LocalDateTime.of(match.getMatchesDate(), match.getMatchesTime());
 
-        // 경기 시작 10분 전 알림
-        LocalDateTime tenMinutesBefore = matchDateTime.minusMinutes(10);
-        schedulerService.scheduleAlertJob(match, "start_alert", tenMinutesBefore);
 
-        // 경기 시작 1시간 후 알림
-        LocalDateTime oneHourLater = matchDateTime.plusHours(1);
-        schedulerService.scheduleAlertJob(match, "in_game_alert", oneHourLater);
+        // start_alert: 경기 10분 전 알림
+        List<Long> usersForStartAlert = alertRepository.findUserIdsByTeamAndAlertTrue(
+                match.getHomeTeam(), match.getAwayTeam(), "start_alert"
+        );
+        if (!usersForStartAlert.isEmpty()) {
+            LocalDateTime tenMinutesBefore = matchDateTime.minusMinutes(10);
+            schedulerService.scheduleAlertJob(match, "start_alert", tenMinutesBefore, usersForStartAlert);
+        }
+
+        // in_game_alert: 경기 1시간 후
+        List<Long> usersForInGameAlert = alertRepository.findUserIdsByTeamAndAlertTrue(
+                match.getHomeTeam(), match.getAwayTeam(), "in_game_alert"
+        );
+        if (!usersForInGameAlert.isEmpty()) {
+            LocalDateTime oneHourLater = matchDateTime.plusHours(1);
+            schedulerService.scheduleAlertJob(match, "in_game_alert", oneHourLater, usersForInGameAlert);
+        }
     }
+
 
 
 

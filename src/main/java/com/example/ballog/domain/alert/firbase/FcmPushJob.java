@@ -45,16 +45,10 @@ public class FcmPushJob implements Job {
     public void execute(JobExecutionContext context) {
         JobDataMap dataMap = context.getMergedJobDataMap();
         Long matchId = dataMap.getLong("matchId");
-        BaseballTeam homeTeam = BaseballTeam.valueOf(dataMap.getString("homeTeam"));
-        BaseballTeam awayTeam = BaseballTeam.valueOf(dataMap.getString("awayTeam"));
         String alertType = dataMap.getString("alertType");
+        List<Long> userIds = (List<Long>) dataMap.get("userIds");
 
-        log.info("[Quartz Job 실행] matchId={}, alertType={}", matchId, alertType);
-
-        List<User> users = userRepository.findAll().stream()
-                .filter(u -> u.getBaseballTeam() != null
-                        && (u.getBaseballTeam().equals(homeTeam) || u.getBaseballTeam().equals(awayTeam)))
-                .toList();
+        List<User> users = userRepository.findAllById(userIds);
 
         for (User user : users) {
             Alert alert = alertRepository.findByUser(user).orElse(null);
