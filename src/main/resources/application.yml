@@ -86,8 +86,9 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.ballog.fcm.FirebaseMessageService: INFO
-    com.ballog.fcm.FcmPushJob: INFO
+    com.example.ballog.domain.alert.firbase.FirbaseInitialization: DEBUG
+    com.example.ballog.domain.alert.firbase.FirebaseMessageService: INFO
+    com.example.ballog.domain.alert.firbase.FcmPushJob: INFO
 
 frontend:
   origin:
