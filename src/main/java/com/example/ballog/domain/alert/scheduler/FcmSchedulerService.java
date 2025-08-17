@@ -16,27 +16,59 @@ public class FcmSchedulerService { //JOB 예약 서비스
 
     private final Scheduler scheduler;
 
-    public void scheduleAlertJob(User user, Matches match, String alertType, LocalDateTime triggerTime) {
+    public void scheduleAlertJob(Matches match, String alertType, LocalDateTime triggerTime) {
         JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put("userId", user.getUserId());
-        jobDataMap.put("type", alertType);
-        jobDataMap.put("team", user.getBaseballTeam().name());
+        jobDataMap.put("matchId", match.getMatchesId());
+        jobDataMap.put("alertType", alertType); // start_alert / in_game_alert
 
         JobDetail jobDetail = JobBuilder.newJob(FcmPushJob.class)
-                .withIdentity(user.getUserId() + "_" + alertType + "_" + match.getMatchesId(), "fcm-jobs")
+                .withIdentity(match.getMatchesId() + "_" + alertType, "fcm-jobs")
                 .setJobData(jobDataMap)
                 .build();
 
         Trigger trigger = TriggerBuilder.newTrigger()
-                .withIdentity(user.getUserId() + "_" + alertType + "_trigger", "fcm-triggers")
+                .withIdentity(match.getMatchesId() + "_" + alertType + "_trigger", "fcm-triggers")
                 .startAt(Timestamp.valueOf(triggerTime))
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule())
                 .build();
 
         try {
+            // 기존 Job이 있으면 삭제
+            JobKey jobKey = jobDetail.getKey();
+            if (scheduler.checkExists(jobKey)) {
+                scheduler.deleteJob(jobKey);
+            }
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
             e.printStackTrace();
         }
     }
+
+
+
+//    private final Scheduler scheduler;
+//
+//    public void scheduleAlertJob(User user, Matches match, String alertType, LocalDateTime triggerTime) {
+//        JobDataMap jobDataMap = new JobDataMap();
+//        jobDataMap.put("userId", user.getUserId());
+//        jobDataMap.put("type", alertType);
+//        jobDataMap.put("team", user.getBaseballTeam().name());
+//
+//        JobDetail jobDetail = JobBuilder.newJob(FcmPushJob.class)
+//                .withIdentity(user.getUserId() + "_" + alertType + "_" + match.getMatchesId(), "fcm-jobs")
+//                .setJobData(jobDataMap)
+//                .build();
+//
+//        Trigger trigger = TriggerBuilder.newTrigger()
+//                .withIdentity(user.getUserId() + "_" + alertType + "_trigger", "fcm-triggers")
+//                .startAt(Timestamp.valueOf(triggerTime))
+//                .withSchedule(SimpleScheduleBuilder.simpleSchedule())
+//                .build();
+//
+//        try {
+//            scheduler.scheduleJob(jobDetail, trigger);
+//        } catch (SchedulerException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }
