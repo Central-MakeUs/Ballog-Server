@@ -3,6 +3,7 @@ package com.example.ballog.domain.login.controller;
 import com.example.ballog.domain.login.dto.request.KakaoTokenRequest;
 import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.global.common.message.BasicResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,7 @@ public class TokenController {
 
     //refreshToken으로 accessToken 재발급
     @PostMapping("/user/refresh")
+    @Operation(summary = "access토큰 재발급", description = "백엔드 테스트용-refresh로 access 토큰 재발급")
     public ResponseEntity<BasicResponse<String>> refreshAccessToken(@RequestBody KakaoTokenRequest kakaoTokenRequest) {
         String refreshToken = kakaoTokenRequest.getRefreshToken();
         String newAccessToken = tokenService.renewAccessToken(refreshToken);
