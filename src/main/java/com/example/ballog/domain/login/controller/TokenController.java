@@ -3,6 +3,7 @@ package com.example.ballog.domain.login.controller;
 import com.example.ballog.domain.login.dto.request.KakaoTokenRequest;
 import com.example.ballog.domain.login.service.TokenService;
 import com.example.ballog.global.common.message.BasicResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
