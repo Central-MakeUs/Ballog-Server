@@ -2,6 +2,7 @@ package com.example.ballog.domain.alert.firbase;
 
 import com.example.ballog.domain.alert.dto.request.FcmMessageRequest;
 import com.example.ballog.domain.login.service.UserService;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -15,9 +16,16 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FirebaseMessageService {
 
+
     private static final Logger log = LoggerFactory.getLogger(FirebaseMessageService.class);
 
+    private final FirbaseInitialization firebaseInitialization; // 초기화 Bean 주입
+
     public String sendMessage(FcmMessageRequest request) {
+        // Firebase 초기화 확인
+        if (FirebaseApp.getApps().isEmpty()) {
+            firebaseInitialization.initialize();
+        }
         System.out.println("전송할 FCM 토큰: " + request.getToken());
 
         log.info("FCM 발송 요청 - token={}, title={}, body={}",
