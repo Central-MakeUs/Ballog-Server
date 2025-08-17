@@ -9,6 +9,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions -XX:-UseContainerCpuShares -XX:-UseContainerCpuQuota -XX:-UseCGroupMemoryLimitForHeap"
       SPRING_DATASOURCE_URL: jdbc:mysql://my-ballog-rds.ctyqwew2u606.ap-northeast-2.rds.amazonaws.com:3306/ballog?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
