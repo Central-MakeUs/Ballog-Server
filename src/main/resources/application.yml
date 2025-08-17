@@ -78,8 +78,8 @@ app:
   default-image-url: ${DEFAULT_IMAGE}
 
 firebase:
-  service-account:
-    path: firebase/service-account.json
+  config: ${FIREBASE_CONFIG}
+
 
 logging:
   level:
@@ -92,3 +92,4 @@ logging:
 frontend:
   origin:
     elastic: ${FRONTED_ELASTIC}
+
