@@ -23,6 +23,7 @@ public class TokenController {
 
     //refreshToken으로 accessToken 재발급
     @PostMapping("/user/refresh")
+    @Operation(summary = "access토큰 재발급", description = "백엔드 테스트용-refresh로 access 토큰 재발급")
     public ResponseEntity<BasicResponse<String>> refreshAccessToken(@RequestBody KakaoTokenRequest kakaoTokenRequest) {
         String refreshToken = kakaoTokenRequest.getRefreshToken();
         String newAccessToken = tokenService.renewAccessToken(refreshToken);
