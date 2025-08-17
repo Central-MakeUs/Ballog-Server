@@ -6,12 +6,10 @@ import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,8 +23,8 @@ public class MatchPollingService {
 
     @Scheduled(fixedRate = 60_000) // 1분마다 실행
     public void pollMatchesAndSchedule() {
-        LocalDateTime now = LocalDateTime.now();
-        List<Matches> upcomingMatches = matchesRepository.findAllByMatchesDateAfterOrMatchesDateEquals(now.toLocalDate());
+        LocalDate today = LocalDate.now();
+        List<Matches> upcomingMatches = matchesRepository.findAllByMatchesDateGreaterThanEqual(today);
 
         for (Matches match : upcomingMatches) {
             scheduleMatchAlerts(match);
