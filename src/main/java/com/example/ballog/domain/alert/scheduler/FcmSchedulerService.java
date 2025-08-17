@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -16,10 +17,11 @@ public class FcmSchedulerService { //JOB 예약 서비스
 
     private final Scheduler scheduler;
 
-    public void scheduleAlertJob(Matches match, String alertType, LocalDateTime triggerTime) {
+    public void scheduleAlertJob(Matches match, String alertType, LocalDateTime triggerTime, List<Long> userIds) {
         JobDataMap jobDataMap = new JobDataMap();
         jobDataMap.put("matchId", match.getMatchesId());
-        jobDataMap.put("alertType", alertType); // start_alert / in_game_alert
+        jobDataMap.put("alertType", alertType);
+        jobDataMap.put("userIds", userIds); // 유저 ID 리스트
 
         JobDetail jobDetail = JobBuilder.newJob(FcmPushJob.class)
                 .withIdentity(match.getMatchesId() + "_" + alertType, "fcm-jobs")
@@ -33,10 +35,8 @@ public class FcmSchedulerService { //JOB 예약 서비스
                 .build();
 
         try {
-            // 기존 Job이 있으면 삭제
-            JobKey jobKey = jobDetail.getKey();
-            if (scheduler.checkExists(jobKey)) {
-                scheduler.deleteJob(jobKey);
+            if (scheduler.checkExists(jobDetail.getKey())) {
+                scheduler.deleteJob(jobDetail.getKey());
             }
             scheduler.scheduleJob(jobDetail, trigger);
         } catch (SchedulerException e) {
@@ -44,6 +44,14 @@ public class FcmSchedulerService { //JOB 예약 서비스
         }
     }
 
+    public boolean isJobExists(Long matchId, String alertType) {
+        try {
+            return scheduler.checkExists(new JobKey(matchId + "_" + alertType, "fcm-jobs"));
+        } catch (SchedulerException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
 
 //    private final Scheduler scheduler;
