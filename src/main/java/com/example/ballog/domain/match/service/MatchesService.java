@@ -1,5 +1,6 @@
 package com.example.ballog.domain.match.service;
 
+import com.example.ballog.domain.alert.service.MatchAlertSetupService;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
@@ -29,11 +30,15 @@ public class MatchesService {
 
     private final MatchesRepository matchesRepository;
     private final MatchRecordRepository matchRecordRepository;
+    private final MatchAlertSetupService matchAlertSetupService;
 
     public MatchesWithResponse createMatches(MatchesRequest request) {
         Matches match = buildMatchFromRequest(request);
         Matches saved = matchesRepository.save(match);
         MatchesResponse response = MatchesResponse.from(saved);
+
+        matchAlertSetupService.scheduleUserAlertsForMatch(saved);   //경기 저장 시점에 푸시 알림 스케줄링
+
         return new MatchesWithResponse(saved, response);
     }
 
