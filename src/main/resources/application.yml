@@ -1,6 +1,6 @@
 server:
-#  port : 8081 #로컬
-  port : 8082 #서버포트 변경
+  port : 8081 #로컬
+#  port : 8082 #서버포트 변경
 
 spring :
   config:
@@ -46,7 +46,9 @@ spring :
             user-info-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_USER_INFO_URI}
             token-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_TOKEN_URI}
             authorization-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_AUTHORIZATION_URI}
-
+  quartz:
+    auto-startup: true
+    job-store-type: memory
 
 apple:
   key-id: ${APPLE_LOGIN_KEY}
@@ -86,9 +88,8 @@ logging:
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.example.ballog.domain.alert.firbase.FirbaseInitialization: DEBUG
-    com.example.ballog.domain.alert.firbase.FirebaseMessageService: INFO
-    com.example.ballog.domain.alert.firbase.FcmPushJob: INFO
+    com.ballog.fcm.FirebaseMessageService: INFO
+    com.ballog.fcm.FcmPushJob: INFO
 
 frontend:
   origin:
