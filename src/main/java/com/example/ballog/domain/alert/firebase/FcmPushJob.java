@@ -1,16 +1,12 @@
-package com.example.ballog.domain.alert.firbase;
+package com.example.ballog.domain.alert.firebase;
 
 import com.example.ballog.domain.alert.dto.request.FcmMessageRequest;
 import com.example.ballog.domain.alert.entity.Alert;
 import com.example.ballog.domain.alert.repository.AlertRepository;
-import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.FcmToken;
-import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.repository.FcmTokenRepository;
-import com.example.ballog.domain.login.repository.OAuthTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.domain.login.entity.User;
-import com.example.ballog.domain.match.entity.Matches;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
