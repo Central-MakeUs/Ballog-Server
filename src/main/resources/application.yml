@@ -46,7 +46,9 @@ spring :
             user-info-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_USER_INFO_URI}
             token-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_TOKEN_URI}
             authorization-uri: ${SPRING_SECURITY_OAUTH2_PROVIDER_APPLE_AUTHORIZATION_URI}
-
+  quartz:
+    auto-startup: true
+    job-store-type: memory
 
 apple:
   key-id: ${APPLE_LOGIN_KEY}
@@ -92,4 +94,3 @@ logging:
 frontend:
   origin:
     elastic: ${FRONTED_ELASTIC}
-

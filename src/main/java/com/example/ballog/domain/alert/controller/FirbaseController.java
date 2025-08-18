@@ -2,7 +2,7 @@ package com.example.ballog.domain.alert.controller;
 
 import com.example.ballog.domain.alert.dto.request.FcmMessageRequest;
 import com.example.ballog.domain.alert.dto.request.FcmTokenRequest;
-import com.example.ballog.domain.alert.firbase.FirebaseMessageService;
+import com.example.ballog.domain.alert.firebase.FirebaseMessageService;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
