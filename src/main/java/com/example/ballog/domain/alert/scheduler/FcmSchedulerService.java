@@ -1,7 +1,6 @@
 package com.example.ballog.domain.alert.scheduler;
 
-import com.example.ballog.domain.alert.firbase.FcmPushJob;
-import com.example.ballog.domain.login.entity.User;
+import com.example.ballog.domain.alert.firebase.FcmPushJob;
 import com.example.ballog.domain.match.entity.Matches;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;

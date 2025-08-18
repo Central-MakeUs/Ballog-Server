@@ -94,4 +94,3 @@ logging:
 frontend:
   origin:
     elastic: ${FRONTED_ELASTIC}
-

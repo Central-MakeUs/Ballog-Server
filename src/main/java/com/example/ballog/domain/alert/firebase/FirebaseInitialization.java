@@ -1,4 +1,4 @@
-package com.example.ballog.domain.alert.firbase;
+package com.example.ballog.domain.alert.firebase;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
@@ -18,9 +17,8 @@ import java.nio.charset.StandardCharsets;
 
 @Service
 @Profile("!test")
-public class FirbaseInitialization {
-
-    private static final Logger logger = LoggerFactory.getLogger(FirbaseInitialization.class);
+public class FirebaseInitialization {
+    private static final Logger logger = LoggerFactory.getLogger(FirebaseInitialization.class);
 
 
     @Value("${firebase.config}")
@@ -73,5 +71,3 @@ public class FirbaseInitialization {
 
 
 }
-
-

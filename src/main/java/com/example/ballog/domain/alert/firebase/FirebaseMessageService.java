@@ -1,7 +1,6 @@
-package com.example.ballog.domain.alert.firbase;
+package com.example.ballog.domain.alert.firebase;
 
 import com.example.ballog.domain.alert.dto.request.FcmMessageRequest;
-import com.example.ballog.domain.login.service.UserService;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
@@ -19,7 +18,7 @@ public class FirebaseMessageService {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseMessageService.class);
 
-    private final FirbaseInitialization firebaseInitialization; // 초기화 Bean 주입
+    private final FirebaseInitialization firebaseInitialization; // 초기화 Bean 주입
 
     public String sendMessage(FcmMessageRequest request) {
         // Firebase 초기화 확인
