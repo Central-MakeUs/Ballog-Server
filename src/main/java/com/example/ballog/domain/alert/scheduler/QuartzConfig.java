@@ -17,6 +17,7 @@ public class QuartzConfig  {
     public SchedulerFactoryBean schedulerFactoryBean() {
         SchedulerFactoryBean factory = new SchedulerFactoryBean();
         factory.setJobFactory(springBeanJobFactory());
+        factory.setAutoStartup(true);
         return factory;
     }
 
