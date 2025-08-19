@@ -18,8 +18,5 @@ public enum BaseballTeam {
     BaseballTeam(String displayName) {
         this.displayName = displayName;
     }
-
-    public String getDisplayName() {
-        return displayName;
-    }
+    
 }
