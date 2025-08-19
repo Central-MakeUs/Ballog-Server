@@ -27,8 +27,10 @@ public class FirebaseInitialization {
     @PostConstruct
     public void initialize() {
         try {
+            String fixedConfig = firebaseConfig.replace("\\n", "\n");
+
             // JSON 문자열을 InputStream으로 변환
-            InputStream serviceAccount = new ByteArrayInputStream(firebaseConfig.getBytes(StandardCharsets.UTF_8));
+            InputStream serviceAccount = new ByteArrayInputStream(fixedConfig.getBytes(StandardCharsets.UTF_8));
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
@@ -44,30 +46,5 @@ public class FirebaseInitialization {
             logger.error("Firebase 초기화 실패: {}", e.getMessage(), e);
         }
     }
-
-
-//    @Value("${firebase.service-account.path}")
-//    private String serviceAccountPath;
-//
-//    @PostConstruct
-//    public void initialize() {
-//        try {
-//            InputStream serviceAccount = new ClassPathResource(serviceAccountPath).getInputStream();
-//
-//            FirebaseOptions options = FirebaseOptions.builder()
-//                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-//                    .build();
-//
-//            if (FirebaseApp.getApps().isEmpty()) {
-//                FirebaseApp.initializeApp(options);
-//                logger.info("FirebaseApp 초기화 성공");
-//            } else {
-//                logger.info("FirebaseApp 이미 초기화됨");
-//            }
-//        } catch (IOException e) {
-//            logger.error("Firebase 초기화 실패: {}", e.getMessage(), e);
-//        }
-//    }
-
 
 }
