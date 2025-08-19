@@ -20,26 +20,29 @@ import java.nio.charset.StandardCharsets;
 public class FirebaseInitialization {
     private static final Logger logger = LoggerFactory.getLogger(FirebaseInitialization.class);
 
-
     @Value("${firebase.config}")
     private String firebaseConfig;
 
+    private volatile boolean initialized = false;
+
     public synchronized void initialize() {
+        if (initialized) {
+            return;
+        }
+
         try {
-            if (!FirebaseApp.getApps().isEmpty()) {
-                logger.info("FirebaseApp 이미 초기화됨");
-                return;
+            if (FirebaseApp.getApps().isEmpty()) {
+                String fixedConfig = firebaseConfig.replace("\\n", "\n");
+                InputStream serviceAccount = new ByteArrayInputStream(fixedConfig.getBytes(StandardCharsets.UTF_8));
+
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                        .build();
+
+                FirebaseApp.initializeApp(options);
+                logger.info("FirebaseApp 초기화 성공");
             }
-
-            String fixedConfig = firebaseConfig.replace("\\n", "\n");
-            InputStream serviceAccount = new ByteArrayInputStream(fixedConfig.getBytes(StandardCharsets.UTF_8));
-
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-
-            FirebaseApp.initializeApp(options);
-            logger.info("FirebaseApp 초기화 성공");
+            initialized = true;
         } catch (IOException e) {
             logger.error("Firebase 초기화 실패", e);
         }
