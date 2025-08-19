@@ -24,27 +24,29 @@ public class FirebaseInitialization {
     @Value("${firebase.config}")
     private String firebaseConfig;
 
-    @PostConstruct
-    public void initialize() {
+    public synchronized void initialize() {
         try {
-            String fixedConfig = firebaseConfig.replace("\\n", "\n");
+            if (!FirebaseApp.getApps().isEmpty()) {
+                logger.info("FirebaseApp 이미 초기화됨");
+                return;
+            }
 
-            // JSON 문자열을 InputStream으로 변환
+            String fixedConfig = firebaseConfig.replace("\\n", "\n");
             InputStream serviceAccount = new ByteArrayInputStream(fixedConfig.getBytes(StandardCharsets.UTF_8));
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
 
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-                logger.info("FirebaseApp 초기화 성공");
-            } else {
-                logger.info("FirebaseApp 이미 초기화됨");
-            }
+            FirebaseApp.initializeApp(options);
+            logger.info("FirebaseApp 초기화 성공");
         } catch (IOException e) {
-            logger.error("Firebase 초기화 실패: {}", e.getMessage(), e);
+            logger.error("Firebase 초기화 실패", e);
         }
     }
 
+    @PostConstruct
+    public void postConstruct() {
+        initialize();
+    }
 }
