@@ -33,10 +33,14 @@ public class FcmPushJob implements Job {
     @Autowired
     private AlertRepository alertRepository;
 
+    @Autowired
+    private FirebaseInitialization firebaseInitialization;
+    
     @Override
     public void execute(JobExecutionContext context) {
+        firebaseInitialization.initialize();
+
         JobDataMap dataMap = context.getMergedJobDataMap();
-        Long matchId = dataMap.getLong("matchId");
         String alertType = dataMap.getString("alertType");
         List<Long> userIds = (List<Long>) dataMap.get("userIds");
 
@@ -45,22 +49,27 @@ public class FcmPushJob implements Job {
         for (User user : users) {
             Alert alert = alertRepository.findByUser(user).orElse(null);
             if (alert == null) continue;
-            if (alertType.equals("start_alert") && !alert.getStartAlert()) continue;
-            if (alertType.equals("in_game_alert") && !alert.getInGameAlert()) continue;
+            if ("start_alert".equals(alertType) && !alert.getStartAlert()) continue;
+            if ("in_game_alert".equals(alertType) && !alert.getInGameAlert()) continue;
 
             FcmToken fcmToken = fcmTokenRepository.findByUser(user).orElse(null);
             if (fcmToken == null || fcmToken.getDeviceToken() == null) continue;
 
-            String title = alertType.equals("start_alert")
+            String title = "start_alert".equals(alertType)
                     ? user.getBaseballTeam() + " 경기 임박!"
                     : user.getBaseballTeam() + " 경기 중!";
-            String body = alertType.equals("start_alert")
+            String body = "start_alert".equals(alertType)
                     ? "볼로그와 함께 경기 볼 준비 되셨나요?"
                     : "지금 그 순간, 볼로그에 남겨볼까요?";
 
             FcmMessageRequest.NotificationDto notification = new FcmMessageRequest.NotificationDto(title, body);
             FcmMessageRequest request = new FcmMessageRequest(fcmToken.getDeviceToken(), notification);
-            firebaseMessageService.sendMessage(request);
+
+            try {
+                firebaseMessageService.sendMessage(request);
+            } catch (Exception e) {
+                System.err.println("FCM 발송 실패 for user " + user.getUserId() + ": " + e.getMessage());
+            }
         }
     }
 }
