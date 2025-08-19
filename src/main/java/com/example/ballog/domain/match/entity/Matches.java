@@ -42,4 +42,10 @@ public class Matches {
 
     @Column(name = "matches_result", length = 100)
     private String matchesResult;
+
+    @Column(name = "start_alert_scheduled", nullable = false)
+    private boolean startAlertScheduled = false;
+
+    @Column(name = "in_game_alert_scheduled", nullable = false)
+    private boolean inGameAlertScheduled = false;
 }

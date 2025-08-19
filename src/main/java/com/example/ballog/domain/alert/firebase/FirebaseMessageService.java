@@ -18,7 +18,7 @@ public class FirebaseMessageService {
 
     private static final Logger log = LoggerFactory.getLogger(FirebaseMessageService.class);
 
-    private final FirebaseInitialization firebaseInitialization; // 초기화 Bean 주입
+    private final FirebaseInitialization firebaseInitialization;
 
     public String sendMessage(FcmMessageRequest request) {
         // Firebase 초기화 확인

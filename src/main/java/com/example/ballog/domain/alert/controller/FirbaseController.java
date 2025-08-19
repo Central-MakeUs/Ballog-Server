@@ -1,10 +1,10 @@
 package com.example.ballog.domain.alert.controller;
 
-import com.example.ballog.domain.alert.dto.request.FcmMessageRequest;
 import com.example.ballog.domain.alert.dto.request.FcmTokenRequest;
-import com.example.ballog.domain.alert.firebase.FirebaseMessageService;
+import com.example.ballog.domain.login.entity.FcmToken;
+import com.example.ballog.domain.login.entity.User;
+import com.example.ballog.domain.login.repository.FcmTokenRepository;
 import com.example.ballog.domain.login.security.CustomUserDetails;
-import com.example.ballog.domain.login.service.UserService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.ApiErrorResponse;
@@ -19,14 +19,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fcm")
 @Tag(name = "Fcm", description = "Fcm API")
 public class FirbaseController {
 
-    private final FirebaseMessageService firebaseMessageService;
-    private final UserService userService;
+    private final FcmTokenRepository fcmTokenRepository;
 
     @PostMapping("/register-token")
     @Operation(summary = "fcm 토큰값 DB 저장", description = "fcm 토큰값 DB 저장 API")
@@ -41,17 +42,21 @@ public class FirbaseController {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        Long userId = userDetails.getUser().getUserId();
-        userService.saveFcmToken(userId, request.getToken());
+        User user = userDetails.getUser();
+
+        Optional<FcmToken> existingToken = fcmTokenRepository.findByUser(user);
+        if (existingToken.isPresent()) {
+            FcmToken token = existingToken.get();
+            token.setDeviceToken(request.getToken());
+            fcmTokenRepository.save(token);
+        } else {
+            FcmToken token = new FcmToken();
+            token.setUser(user);
+            token.setDeviceToken(request.getToken());
+            fcmTokenRepository.save(token);
+        }
         return ResponseEntity.ok().build();
     }
-
-    @PostMapping("/send")
-    public ResponseEntity<String> sendMessage(@RequestBody FcmMessageRequest request) {
-        String response = firebaseMessageService.sendMessage(request);
-        return ResponseEntity.ok(response);
-    }
-
 }
 
 

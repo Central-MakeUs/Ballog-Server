@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,13 +22,15 @@ public class MatchPollingService {
     private final AlertRepository alertRepository;
     private final FcmSchedulerService schedulerService;
 
-    @Scheduled(fixedRate = 60_000) // 1분마다 실행
-    public void pollMatchesAndSchedule() {
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * ?") // 매일 00:00:00 실행
+    public void pollNewMatches() {
         LocalDate today = LocalDate.now();
-        List<Matches> upcomingMatches = matchesRepository.findAllByMatchesDateGreaterThanEqual(today);
+        List<Matches> newMatches = matchesRepository.findUpcomingMatchesWithNoAlerts(today);
 
-        for (Matches match : upcomingMatches) {
+        for (Matches match : newMatches) {
             scheduleMatchAlerts(match);
+            matchesRepository.markAlertsScheduled(match.getMatchesId());
         }
     }
 
@@ -39,7 +42,7 @@ public class MatchPollingService {
         if (!usersForStartAlert.isEmpty() && !schedulerService.isJobExists(match.getMatchesId(), "start_alert")) {
             LocalDateTime tenMinutesBefore = matchDateTime.minusMinutes(10);
             schedulerService.scheduleAlertJob(match, "start_alert", tenMinutesBefore, usersForStartAlert);
-            log.info("[폴링] start_alert Job 등록: matchId={}, users={}", match.getMatchesId(), usersForStartAlert);
+            log.info("[스케줄링] start_alert Job 등록: matchId={}, users={}", match.getMatchesId(), usersForStartAlert);
         }
 
         // in_game_alert: 경기 1시간 후
@@ -47,7 +50,7 @@ public class MatchPollingService {
         if (!usersForInGameAlert.isEmpty() && !schedulerService.isJobExists(match.getMatchesId(), "in_game_alert")) {
             LocalDateTime oneHourLater = matchDateTime.plusHours(1);
             schedulerService.scheduleAlertJob(match, "in_game_alert", oneHourLater, usersForInGameAlert);
-            log.info("[폴링] in_game_alert Job 등록: matchId={}, users={}", match.getMatchesId(), usersForInGameAlert);
+            log.info("[스케줄링] in_game_alert Job 등록: matchId={}, users={}", match.getMatchesId(), usersForInGameAlert);
         }
     }
 }
