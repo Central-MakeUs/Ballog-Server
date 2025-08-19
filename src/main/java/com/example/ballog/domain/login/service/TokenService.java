@@ -72,30 +72,4 @@ public class TokenService {
         User user = token.getUser();
         return createAccessToken(user);
     }
-
-    // RefreshToken 조회
-    public String getRefreshToken(User user) {
-        RefreshToken refreshToken = refreshTokenRepository.findByUser(user);
-
-        if (refreshToken != null) {
-            return refreshToken.getRefreshToken();
-        }
-        return null;
-    }
-
-    public Long extractUserIdFromAccessToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(secretKey)
-                .parseClaimsJws(token)
-                .getBody();
-
-        String subject = claims.getSubject();
-
-        if (subject == null) {
-            throw new RuntimeException("토큰에 subject가 없습니다.");
-        }
-
-        return Long.valueOf(subject);
-    }
-
 }
