@@ -1,5 +1,5 @@
 server:
-#  port : 8081 #로컬
+#  port : 8080 #로컬
   port : 8082 #서버포트 변경
 
 spring :

@@ -43,9 +43,22 @@ public class Matches {
     @Column(name = "matches_result", length = 100)
     private String matchesResult;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private Status status;
+
     @Column(name = "start_alert_scheduled", nullable = false)
     private boolean startAlertScheduled = false;
 
     @Column(name = "in_game_alert_scheduled", nullable = false)
     private boolean inGameAlertScheduled = false;
+
+    @PrePersist
+    public void prePersist() {
+        if (status == null) {
+            status = Status.DEFAULT;
+        }
+    }
+
+
 }
