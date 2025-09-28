@@ -3,6 +3,7 @@ package com.example.ballog.domain.match.dto.response;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.entity.Stadium;
+import com.example.ballog.domain.match.entity.Status;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -20,6 +21,7 @@ public class MatchesResponse {
     private BaseballTeam awayTeam;
     private Stadium stadium;
     private String matchesResult;
+    private Status status;
 
     public static MatchesResponse from(Matches match) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -31,7 +33,8 @@ public class MatchesResponse {
                 match.getHomeTeam(),
                 match.getAwayTeam(),
                 match.getStadium(),
-                match.getMatchesResult()
+                match.getMatchesResult(),
+                match.getStatus()
         );
     }
 }
