@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+
+  db:
+    image: mysql:8.0
+    container_name: ballog-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: ${SPRING_DATASOURCE_USERNAME}
+      MYSQL_USER: ${SPRING_DATASOURCE_USERNAME}
+      MYSQL_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "3306:3306"      # EC2 밖에서 접속하려면 열기
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - ballog-network
+
+
   spring-boot-app:
     container_name: ballog-server
     restart: on-failure
@@ -9,7 +27,8 @@ services:
     ports:
       - "8082:8082"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://my-ballog-rds.ctyqwew2u606.ap-northeast-2.rds.amazonaws.com:3306/ballog?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
+      JAVA_TOOL_OPTIONS: "-XX:+UseContainerSupport -XX:+IgnoreUnrecognizedVMOptions -XX:-UseContainerCpuShares -XX:-UseContainerCpuQuota -XX:-UseCGroupMemoryLimitForHeap"
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/ballog?serverTimezone=Asia/Seoul&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       S3ACCESSKEY: ${S3ACCESSKEY}
@@ -39,3 +58,7 @@ services:
       DEFAULT_IMAGE: ${DEFAULT_IMAGE}
       FRONTED_ELASTIC: ${FRONTED_ELASTIC}
       TZ: Asia/Seoul
+    depends_on:
+      - db
+    networks:
+      - ballog-network
