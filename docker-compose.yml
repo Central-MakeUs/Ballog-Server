@@ -63,6 +63,22 @@ services:
       - db
     networks:
       - ballog-network
+
+  nginx:
+    container_name: ballog-nginx
+    image: nginx:1.24
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../data/nginx/app.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - spring-boot-app
+    networks:
+      - ballog-network
+
 networks:
   ballog-network:
     driver: bridge
