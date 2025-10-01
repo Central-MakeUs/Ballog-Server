@@ -62,3 +62,6 @@ services:
       - db
     networks:
       - ballog-network
+networks:
+  ballog-network:
+    driver: bridge
