@@ -57,6 +57,7 @@ services:
       APPLE_KEY_PATH: ${APPLE_KEY_PATH}
       DEFAULT_IMAGE: ${DEFAULT_IMAGE}
       FRONTED_ELASTIC: ${FRONTED_ELASTIC}
+      FIREBASE_CONFIG: ${FIREBASE_CONFIG}
       TZ: Asia/Seoul
     depends_on:
       - db
