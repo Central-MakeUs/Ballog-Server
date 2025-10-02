@@ -28,7 +28,7 @@ public class TokenService {
     public String createAccessToken(User user) { //AccessToken을 JWT형식으로 생성함
         return Jwts.builder()
                 .setSubject(user.getUserId().toString())
-                .setExpiration(new Date(System.currentTimeMillis() + 24 * 3600000)) //하루
+                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 3600000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
@@ -39,7 +39,7 @@ public class TokenService {
                 .setSubject("access-token")
                 .claim("userId", user.getUserId())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 7 * 24 * 3600000)) //1주일
+                .setExpiration(new Date(System.currentTimeMillis() + 14 * 24 * 3600000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
