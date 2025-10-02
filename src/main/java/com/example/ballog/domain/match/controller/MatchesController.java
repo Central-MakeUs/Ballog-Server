@@ -7,7 +7,6 @@ import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
-import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.service.MatchesService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -17,11 +16,13 @@ import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +54,21 @@ public class MatchesController {
                 BasicResponse.ofSuccess("경기일정이 등록 성공", result.getResponse())
         );
     }
+
+
+    @GetMapping("/date")
+    @Operation(summary = "특정 날짜 경기 조회(캘린더)", description = "요청받은 날짜의 경기 일정 조회(캘린더)")
+    public ResponseEntity<BasicResponse<Map<String, List<MatchesResponse>>>> getMatchesByDate(
+            @RequestParam("matches_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate matchesDate) {
+
+        List<MatchesResponse> matches = matchesService.getMatchesByDate(matchesDate);
+
+        Map<String, List<MatchesResponse>> responseData = new HashMap<>();
+        responseData.put(matchesDate.toString(), matches);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("특정 날짜 경기 조회 성공(캘린더)", responseData));
+    }
+
 
     @GetMapping
     @Operation(summary = "오늘 경기 조회", description = "오늘 날짜의 경기 일정만 조회")
