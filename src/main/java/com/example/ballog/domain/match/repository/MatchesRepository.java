@@ -23,4 +23,6 @@ public interface MatchesRepository extends JpaRepository<Matches, Long> {
     @Query("UPDATE Matches m SET m.startAlertScheduled = true, m.inGameAlertScheduled = true WHERE m.matchesId = :matchId")
     void markAlertsScheduled(@Param("matchId") Long matchId);
 
+    List<Matches> findByMatchesDate(LocalDate matchesDate);
+
 }

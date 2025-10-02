@@ -40,6 +40,14 @@ public class MatchesService {
         return new MatchesWithResponse(saved, response);
     }
 
+    public List<MatchesResponse> getMatchesByDate(LocalDate matchesDate) {
+        List<Matches> matchesList = matchesRepository.findByMatchesDate(matchesDate);
+
+        return matchesList.stream()
+                .map(MatchesResponse::from)
+                .toList();
+    }
+
 
     public List<MatchesResponse> getTodayMatches() {
         LocalDate today = LocalDate.now();
