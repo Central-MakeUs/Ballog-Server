@@ -7,6 +7,7 @@ import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
 import com.example.ballog.domain.match.entity.Matches;
+import com.example.ballog.domain.match.entity.Status;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.entity.Result;
@@ -18,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +40,14 @@ public class MatchesService {
         return new MatchesWithResponse(saved, response);
     }
 
+    public List<MatchesResponse> getMatchesByDate(LocalDate matchesDate) {
+        List<Matches> matchesList = matchesRepository.findByMatchesDate(matchesDate);
+
+        return matchesList.stream()
+                .map(MatchesResponse::from)
+                .toList();
+    }
+
 
     public List<MatchesResponse> getTodayMatches() {
         LocalDate today = LocalDate.now();
@@ -56,13 +62,20 @@ public class MatchesService {
      */
     public Map<String, List<MatchesGroupedResponse>> getAllMatchesGroupedByDate() {
         List<Matches> matchesList = matchesRepository.findAll();
+
+        // Comparator.reverseOrder()로 최신순 TreeMap 생성
         return matchesList.stream()
+                // 날짜+시간 기준 최신순 정렬
+                .sorted(Comparator.comparing(Matches::getMatchesDate).reversed()
+                        .thenComparing(Matches::getMatchesTime).reversed())
+                // 날짜별 그룹화
                 .collect(Collectors.groupingBy(
-                        match -> match.getMatchesDate().toString(),
-                        TreeMap::new,
-                        Collectors.mapping(MatchesGroupedResponse::from, Collectors.toList())
+                        match -> match.getMatchesDate().toString(),         // keyMapper
+                        () -> new TreeMap<String, List<MatchesGroupedResponse>>(Comparator.reverseOrder()), // mapFactory
+                        Collectors.mapping(MatchesGroupedResponse::from, Collectors.toList())              // downstream
                 ));
     }
+
 
     public MatchesResponse getMatchDetail(Long matchId) {
         Matches match = findMatchById(matchId);
@@ -102,6 +115,7 @@ public class MatchesService {
         match.setAwayTeam(request.getAwayTeam());
         match.setStadium(request.getStadium());
         match.setMatchesResult(request.getMatchesResult());
+        match.setStatus(request.getStatus());
         return match;
     }
 
@@ -123,6 +137,10 @@ public class MatchesService {
         }
         if (request.getMatchesResult() != null) {
             match.setMatchesResult(request.getMatchesResult());
+            match.setStatus(Status.COMPLETED); //경기결과 입력 -> 경기 완료
+        }
+        if(request.getStatus() !=null){
+            match.setStatus(request.getStatus());
         }
     }
 
