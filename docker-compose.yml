@@ -14,7 +14,7 @@ services:
     ports:
       - "3306:3306"      # EC2 밖에서 접속하려면 열기
     volumes:
-      - ./data/mysql:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     networks:
       - ballog-network
 
@@ -78,6 +78,8 @@ services:
       - spring-boot-app
     networks:
       - ballog-network
+volumes:
+  mysql-data:
 
 networks:
   ballog-network:
