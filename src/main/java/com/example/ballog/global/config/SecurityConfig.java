@@ -38,7 +38,7 @@ public class SecurityConfig {
                 )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(cors -> cors.disable()) 
+                .cors(cors -> cors.disable())
                 .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
 
@@ -51,11 +51,11 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/error",
             "/api/v1/**",
-            "/favicon.ico", 
+            "/favicon.ico",
             "https://appleid.apple.com/**"
     };
 
-    
+
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
