@@ -1,0 +1,13 @@
+# MySQL 데이터 폴더 제외
+data/mysql
+
+# 빌드 결과물 제외
+build
+*.log
+.gradle
+.gradle*
+*.iml
+
+# OS 관련 임시 파일 제외
+.DS_Store
+*.swp
