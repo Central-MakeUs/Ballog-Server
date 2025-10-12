@@ -1,0 +1,6 @@
+# MySQL 데이터 디렉터리 제외
+data/mysql
+
+# 로그 파일 제외
+*.log
+*.tmp
