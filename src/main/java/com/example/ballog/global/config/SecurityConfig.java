@@ -15,9 +15,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
 
 import java.util.List;
 
@@ -30,55 +27,39 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
 
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrfConfig -> csrfConfig.disable())
+                .headers(headerConfig -> headerConfig.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()))
+                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(URL_TO_PERMIT).permitAll()
+                        .anyRequest().authenticated()
+                )
+
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> cors.disable())
+                .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
+
+
+        return http.build();
+    }
+
     private static final String[] URL_TO_PERMIT = {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-resources/**",
             "/error",
+            "/api/v1/**",
             "/favicon.ico",
-            "/api/v1/auth/**"
+            "https://appleid.apple.com/**"
     };
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
-            .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Preflight 허용
-                    .requestMatchers(URL_TO_PERMIT).permitAll()
-                    .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .cors() // CorsConfigurationSource 사용
-            .and()
-            .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService),
-                    org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://ballog.shop",
-                "https://ballog-front-web.vercel.app",
-                "https://ballog-front-web-one.vercel.app"
-        ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Refresh-Token"));
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }
