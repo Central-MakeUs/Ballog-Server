@@ -33,7 +33,6 @@ public class SecurityConfig {
                 .csrf(csrfConfig -> csrfConfig.disable())
                 .headers(headerConfig -> headerConfig.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() //OPTIONS 메서드는 항상 허용
                         .requestMatchers(URL_TO_PERMIT).permitAll()
                         .anyRequest().authenticated()
                 )
