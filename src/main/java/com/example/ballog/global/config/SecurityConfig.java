@@ -25,7 +25,8 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomUserDetailsService customUserDetailsService;
+    @Value("${frontend.origin.elastic}")
+    private String frontedElastic;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -38,7 +39,7 @@ public class SecurityConfig {
                 )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(cors -> cors.disable())
+                .cors(withDefaults()) 
                 .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
 
@@ -51,10 +52,33 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/error",
             "/api/v1/**",
-            "/favicon.ico",
+            "/favicon.ico", 
             "https://appleid.apple.com/**"
     };
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+        configuration.addExposedHeader("Authorization");
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                frontedElastic,
+                "https://ballog.shop",
+                "https://ballog-front-web.vercel.app/",
+                "https://ballog-front-web-one.vercel.app"
+        ));
+
+        configuration.addAllowedMethod("*");
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    private final CustomUserDetailsService customUserDetailsService;
 
 
     @Bean
