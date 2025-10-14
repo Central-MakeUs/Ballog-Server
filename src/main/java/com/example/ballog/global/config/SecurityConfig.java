@@ -65,7 +65,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 frontedElastic,
                 "https://ballog.shop",
-                "https://ballog-front-web.vercel.app/",
+                "https://ballog-front-web.vercel.app",
                 "https://ballog-front-web-one.vercel.app"
         ));
 
