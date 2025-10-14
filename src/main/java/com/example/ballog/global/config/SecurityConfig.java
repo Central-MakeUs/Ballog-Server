@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .csrf(csrfConfig -> csrfConfig.disable())
                 .headers(headerConfig -> headerConfig.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(URL_TO_PERMIT).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -71,7 +72,7 @@ public class SecurityConfig {
 
         configuration.addAllowedMethod("*");
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        // configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
