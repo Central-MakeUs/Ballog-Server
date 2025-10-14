@@ -15,7 +15,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -26,8 +25,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${frontend.origin.elastic}")
-    private String frontedElastic;
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,13 +33,12 @@ public class SecurityConfig {
                 .csrf(csrfConfig -> csrfConfig.disable())
                 .headers(headerConfig -> headerConfig.frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()))
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(URL_TO_PERMIT).permitAll()
                         .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .cors(withDefaults()) 
+                .cors(cors -> cors.disable())
                 .addFilterBefore(new JwtAuthenticationFilter(customUserDetailsService), UsernamePasswordAuthenticationFilter.class);
 
 
@@ -54,33 +51,10 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/error",
             "/api/v1/**",
-            "/favicon.ico", 
+            "/favicon.ico",
             "https://appleid.apple.com/**"
     };
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedHeaders(List.of("Content-Type", "Authorization"));
-        configuration.addExposedHeader("Authorization");
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                frontedElastic,
-                "https://ballog.shop",
-                "https://ballog-front-web.vercel.app",
-                "https://ballog-front-web-one.vercel.app"
-        ));
-
-        configuration.addAllowedMethod("*");
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
-
-    private final CustomUserDetailsService customUserDetailsService;
 
 
     @Bean
