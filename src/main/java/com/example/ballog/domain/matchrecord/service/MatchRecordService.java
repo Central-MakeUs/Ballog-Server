@@ -6,6 +6,7 @@ import com.example.ballog.domain.Image.service.S3Service;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
+import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
@@ -94,10 +95,10 @@ public class MatchRecordService {
         Matches match = matchesRepository.findById(matchId)
                 .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
 
-        String userTeam = currentUser.getBaseballTeam().name();
+        BaseballTeam userTeam = currentUser.getBaseballTeam();
 
         //응원팀이 설정된 경우 (NONE이 아님)
-        if (userTeam != null && !userTeam.equalsIgnoreCase("NONE")) {
+        if (userTeam != null && userTeam != BaseballTeam.NONE) {
             EmotionStats teamStats = calculateEmotionStatsByTeam(userTeam);
             List<EmotionGroupInfo> teamEmotionGroups = groupEmotionsByTeam(userTeam);
 
@@ -108,7 +109,7 @@ public class MatchRecordService {
                     .awayTeam(match.getAwayTeam().name())
                     .matchDate(match.getMatchesDate())
                     .matchTime(match.getMatchesTime())
-                    .userTeam(userTeam)
+                    .userTeam(userTeam.name())
                     .positiveEmotionPercent(teamStats.positivePercent)
                     .negativeEmotionPercent(teamStats.negativePercent)
                     .emotionGroupList(teamEmotionGroups)
@@ -116,8 +117,8 @@ public class MatchRecordService {
         }
 
         //응원팀이 NONE인 경우 → 경기의 홈팀, 어웨이팀별 통계 반환
-        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam().name());
-        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam().name());
+        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam());
+        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam());
 
         return MatchTeamEmotionResponse.builder()
                 .matchId(match.getMatchesId())
@@ -307,13 +308,13 @@ public class MatchRecordService {
         }
     }
 
-    private EmotionStats calculateEmotionStatsByTeam(String baseballTeam) {
-        List<Emotion> teamEmotions = emotionRepository.findByUser_BaseballTeam(baseballTeam);
+    private EmotionStats calculateEmotionStatsByTeam(BaseballTeam baseballTeam) {
+        List<Emotion> teamEmotions = emotionRepository.findByUserBaseballTeam(baseballTeam);
         return EmotionStats.from(teamEmotions);
     }
 
-    private List<EmotionGroupInfo> groupEmotionsByTeam(String baseballTeam) {
-        List<Emotion> emotions = emotionRepository.findByUser_BaseballTeam(baseballTeam);
+    private List<EmotionGroupInfo> groupEmotionsByTeam(BaseballTeam baseballTeam) {
+        List<Emotion> emotions = emotionRepository.findByUserBaseballTeam(baseballTeam);
         emotions.sort(Comparator.comparing(Emotion::getCreatedAt));
 
         List<EmotionGroupInfo> groups = new ArrayList<>();
@@ -341,6 +342,7 @@ public class MatchRecordService {
 
         return groups;
     }
+
 
 
     private record WinStats(double winRate) {}
