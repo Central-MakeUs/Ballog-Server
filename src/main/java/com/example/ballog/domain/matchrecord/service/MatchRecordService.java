@@ -90,6 +90,52 @@ public class MatchRecordService {
     }
 
     @Transactional(readOnly = true)
+    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User currentUser) {
+        Matches match = matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        String userTeam = currentUser.getBaseballTeam().name();
+
+        //응원팀이 설정된 경우 (NONE이 아님)
+        if (userTeam != null && !userTeam.equalsIgnoreCase("NONE")) {
+            EmotionStats teamStats = calculateEmotionStatsByTeam(userTeam);
+            List<EmotionGroupInfo> teamEmotionGroups = groupEmotionsByTeam(userTeam);
+
+            return MatchTeamEmotionResponse.builder()
+                    .matchId(match.getMatchesId())
+                    .stadium(match.getStadium().name())
+                    .homeTeam(match.getHomeTeam().name())
+                    .awayTeam(match.getAwayTeam().name())
+                    .matchDate(match.getMatchesDate())
+                    .matchTime(match.getMatchesTime())
+                    .userTeam(userTeam)
+                    .positiveEmotionPercent(teamStats.positivePercent)
+                    .negativeEmotionPercent(teamStats.negativePercent)
+                    .emotionGroupList(teamEmotionGroups)
+                    .build();
+        }
+
+        //응원팀이 NONE인 경우 → 경기의 홈팀, 어웨이팀별 통계 반환
+        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam().name());
+        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam().name());
+
+        return MatchTeamEmotionResponse.builder()
+                .matchId(match.getMatchesId())
+                .stadium(match.getStadium().name())
+                .homeTeam(match.getHomeTeam().name())
+                .awayTeam(match.getAwayTeam().name())
+                .matchDate(match.getMatchesDate())
+                .matchTime(match.getMatchesTime())
+                .userTeam("NONE")
+                .homeTeamPositivePercent(homeStats.positivePercent)
+                .homeTeamNegativePercent(homeStats.negativePercent)
+                .awayTeamPositivePercent(awayStats.positivePercent)
+                .awayTeamNegativePercent(awayStats.negativePercent)
+                .build();
+    }
+
+
+    @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
         WinStats winStats = calculateWinStats(records);
@@ -260,6 +306,42 @@ public class MatchRecordService {
             );
         }
     }
+
+    private EmotionStats calculateEmotionStatsByTeam(String baseballTeam) {
+        List<Emotion> teamEmotions = emotionRepository.findByUser_BaseballTeam(baseballTeam);
+        return EmotionStats.from(teamEmotions);
+    }
+
+    private List<EmotionGroupInfo> groupEmotionsByTeam(String baseballTeam) {
+        List<Emotion> emotions = emotionRepository.findByUser_BaseballTeam(baseballTeam);
+        emotions.sort(Comparator.comparing(Emotion::getCreatedAt));
+
+        List<EmotionGroupInfo> groups = new ArrayList<>();
+        EmotionType currentType = null;
+        LocalDateTime groupStart = null;
+        long count = 0;
+
+        for (Emotion e : emotions) {
+            LocalDateTime minute = e.getCreatedAt().truncatedTo(ChronoUnit.MINUTES);
+            if (currentType == null || !minute.equals(groupStart) || e.getEmotionType() != currentType) {
+                if (count >= 3) {
+                    groups.add(new EmotionGroupInfo(groupStart, currentType, count));
+                }
+                currentType = e.getEmotionType();
+                groupStart = minute;
+                count = 1;
+            } else {
+                count++;
+            }
+        }
+
+        if (count >= 3) {
+            groups.add(new EmotionGroupInfo(groupStart, currentType, count));
+        }
+
+        return groups;
+    }
+
 
     private record WinStats(double winRate) {}
 }

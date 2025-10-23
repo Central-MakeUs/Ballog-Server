@@ -6,6 +6,7 @@ import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordDetailResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordResponse;
+import com.example.ballog.domain.matchrecord.dto.response.MatchTeamEmotionResponse;
 import com.example.ballog.domain.matchrecord.service.MatchRecordService;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -69,6 +70,19 @@ public class MatchRecordController {
         MatchRecordDetailResponse response = matchRecordService.getRecordDetailByMatchId(matchId, user);
         return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 상세 조회 성공 (matchId 기반)", response));
     }
+
+    @GetMapping("/matches/{matchId}/team")
+    @Operation(summary = "경기 기준 응원팀 또는 경기별 감정 통계 조회")
+    public ResponseEntity<BasicResponse<MatchTeamEmotionResponse>> getTeamEmotionStatsByMatch(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("matchId") Long matchId) {
+
+        User user = getAuthenticatedUser(userDetails);
+        MatchTeamEmotionResponse response = matchRecordService.getTeamEmotionStatsByMatch(matchId, user);
+
+        return ResponseEntity.ok(BasicResponse.ofSuccess("경기 기준 응원팀/감정 통계 조회 성공", response));
+    }
+
 
     @GetMapping
     @Operation(summary = "전체 직관 기록 목록 조회")

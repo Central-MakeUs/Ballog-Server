@@ -23,4 +23,6 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     void deleteAllByUserUserId(@Param("userId") Long userId);
 
     void deleteAllByMatchRecord(MatchRecord matchRecord);
+
+    List<Emotion> findByUser_BaseballTeam(String baseballTeam);
 }
