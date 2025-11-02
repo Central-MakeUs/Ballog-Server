@@ -6,6 +6,7 @@ import com.example.ballog.domain.Image.service.S3Service;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
+import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
@@ -88,6 +89,52 @@ public class MatchRecordService {
 
         return getRecordDetail(record.getMatchrecordId(), currentUser);
     }
+
+    @Transactional(readOnly = true)
+    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User currentUser) {
+        Matches match = matchesRepository.findById(matchId)
+                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+
+        BaseballTeam userTeam = currentUser.getBaseballTeam();
+
+        //응원팀이 설정된 경우 (NONE이 아님)
+        if (userTeam != null && userTeam != BaseballTeam.NONE) {
+            EmotionStats teamStats = calculateEmotionStatsByTeam(userTeam);
+            List<EmotionGroupInfo> teamEmotionGroups = groupEmotionsByTeam(userTeam);
+
+            return MatchTeamEmotionResponse.builder()
+                    .matchId(match.getMatchesId())
+                    .stadium(match.getStadium().name())
+                    .homeTeam(match.getHomeTeam().name())
+                    .awayTeam(match.getAwayTeam().name())
+                    .matchDate(match.getMatchesDate())
+                    .matchTime(match.getMatchesTime())
+                    .userTeam(userTeam.name())
+                    .positiveEmotionPercent(teamStats.positivePercent)
+                    .negativeEmotionPercent(teamStats.negativePercent)
+                    .emotionGroupList(teamEmotionGroups)
+                    .build();
+        }
+
+        //응원팀이 NONE인 경우 → 경기의 홈팀, 어웨이팀별 통계 반환
+        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam());
+        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam());
+
+        return MatchTeamEmotionResponse.builder()
+                .matchId(match.getMatchesId())
+                .stadium(match.getStadium().name())
+                .homeTeam(match.getHomeTeam().name())
+                .awayTeam(match.getAwayTeam().name())
+                .matchDate(match.getMatchesDate())
+                .matchTime(match.getMatchesTime())
+                .userTeam("NONE")
+                .homeTeamPositivePercent(homeStats.positivePercent)
+                .homeTeamNegativePercent(homeStats.negativePercent)
+                .awayTeamPositivePercent(awayStats.positivePercent)
+                .awayTeamNegativePercent(awayStats.negativePercent)
+                .build();
+    }
+
 
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
@@ -260,6 +307,43 @@ public class MatchRecordService {
             );
         }
     }
+
+    private EmotionStats calculateEmotionStatsByTeam(BaseballTeam baseballTeam) {
+        List<Emotion> teamEmotions = emotionRepository.findByUserBaseballTeam(baseballTeam);
+        return EmotionStats.from(teamEmotions);
+    }
+
+    private List<EmotionGroupInfo> groupEmotionsByTeam(BaseballTeam baseballTeam) {
+        List<Emotion> emotions = emotionRepository.findByUserBaseballTeam(baseballTeam);
+        emotions.sort(Comparator.comparing(Emotion::getCreatedAt));
+
+        List<EmotionGroupInfo> groups = new ArrayList<>();
+        EmotionType currentType = null;
+        LocalDateTime groupStart = null;
+        long count = 0;
+
+        for (Emotion e : emotions) {
+            LocalDateTime minute = e.getCreatedAt().truncatedTo(ChronoUnit.MINUTES);
+            if (currentType == null || !minute.equals(groupStart) || e.getEmotionType() != currentType) {
+                if (count >= 3) {
+                    groups.add(new EmotionGroupInfo(groupStart, currentType, count));
+                }
+                currentType = e.getEmotionType();
+                groupStart = minute;
+                count = 1;
+            } else {
+                count++;
+            }
+        }
+
+        if (count >= 3) {
+            groups.add(new EmotionGroupInfo(groupStart, currentType, count));
+        }
+
+        return groups;
+    }
+
+
 
     private record WinStats(double winRate) {}
 }

@@ -1,6 +1,7 @@
 package com.example.ballog.domain.emotion.repository;
 
 import com.example.ballog.domain.emotion.entity.Emotion;
+import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -23,4 +24,11 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     void deleteAllByUserUserId(@Param("userId") Long userId);
 
     void deleteAllByMatchRecord(MatchRecord matchRecord);
+    @Query("""
+                SELECT e
+                FROM Emotion e
+                JOIN User u ON e.userId = u.userId
+                WHERE u.baseballTeam = :baseballTeam
+            """)
+    List<Emotion> findByUserBaseballTeam(@Param("baseballTeam") BaseballTeam baseballTeam);
 }
