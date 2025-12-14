@@ -25,6 +25,33 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     """)
     List<Object[]> countByEmotionType(@Param("recordId") Long recordId); //감정관련 쿼리 한번에 불러오기
 
+    @Query("""
+    select u.baseballTeam, e.emotionType, count(e)
+    from Emotion e
+    join User u on u.userId = e.userId
+    where e.matches.matchesId = :matchId
+      and u.baseballTeam != :noneTeam
+      and u.baseballTeam in (:homeTeam, :awayTeam)
+    group by u.baseballTeam, e.emotionType
+    """)
+    List<Object[]> countEmotionByMatchExcludeNone(
+            @Param("matchId") Long matchId,
+            @Param("homeTeam") BaseballTeam homeTeam,
+            @Param("awayTeam") BaseballTeam awayTeam,
+            @Param("noneTeam") BaseballTeam noneTeam
+    );
+
+
+    @Query("""
+    select u.baseballTeam, e.emotionType, count(e)
+    from Emotion e
+    join User
+              u on u.userId = e.userId
+    where e.matches.matchesId = :matchId
+    group by u.baseballTeam, e.emotionType
+    """)
+    List<Object[]> countEmotionByMatch(@Param("matchId") Long matchId); //내가 응원하는 팀의 전체 클릭 수 (긍정/부정)
+
     List<Emotion> findByUserId(Long userId);
 
     @Modifying
@@ -39,6 +66,9 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
                 WHERE u.baseballTeam = :baseballTeam
             """)
     List<Emotion> findByUserBaseballTeam(@Param("baseballTeam") BaseballTeam baseballTeam);
+
+
+
 
 
 }

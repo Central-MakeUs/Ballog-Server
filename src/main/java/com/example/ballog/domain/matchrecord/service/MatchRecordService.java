@@ -18,20 +18,19 @@ import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MatchRecordService {
 
     @Value("${app.default-image-url}")
@@ -87,28 +86,87 @@ public class MatchRecordService {
     }
 
 
+
     @Transactional(readOnly = true)
-    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User currentUser) {
-        Matches match = matchesRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User user) {
 
-        BaseballTeam userTeam = currentUser.getBaseballTeam();
+        Matches match = matchesRepository.findById(matchId).orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        BaseballTeam userTeam = user.getBaseballTeam();
 
-        EmotionStats userTeamStats = (userTeam != null && userTeam != BaseballTeam.NONE) ? calculateEmotionStatsByTeam(userTeam) : null;
-        List<EmotionGroupInfo> userTeamEmotionGroups = (userTeamStats != null) ? groupEmotionsByTeam(userTeam) : null;
-        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam());
-        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam());
+        // NONE 제외 + 홈/원정 팀만 긍정/부정 집계
+        List<Object[]> rows =
+                emotionRepository.countEmotionByMatchExcludeNone(
+                        matchId,
+                        match.getHomeTeam(),
+                        match.getAwayTeam(),
+                        BaseballTeam.NONE
+                );
 
-        return MatchTeamEmotionResponse.from(match, userTeam,
-                userTeamStats != null ? userTeamStats.positivePercent() : null,
-                userTeamStats != null ? userTeamStats.negativePercent() : null,
-                userTeamEmotionGroups,
-                homeStats.positivePercent(),
-                homeStats.negativePercent(),
-                awayStats.positivePercent(),
-                awayStats.negativePercent()
+        // team -> emotionType -> count
+        Map<BaseballTeam, Map<EmotionType, Long>> statMap = new EnumMap<>(BaseballTeam.class);
+
+        for (Object[] row : rows) {
+            BaseballTeam team = (BaseballTeam) row[0];
+            EmotionType type = (EmotionType) row[1];
+            Long count = (Long) row[2];
+
+            statMap
+                    .computeIfAbsent(team, t -> new EnumMap<>(EmotionType.class))
+                    .put(type, count);
+
+        }
+
+        //1. 응원팀 있는 경우 → 해당 팀의 긍/부정 "개수"
+        if (userTeam != null && userTeam != BaseballTeam.NONE) {
+
+            Map<EmotionType, Long> userStat = statMap.getOrDefault(userTeam, Map.of());
+
+            long positiveCnt = userStat.getOrDefault(EmotionType.POSITIVE, 0L);
+            long negativeCnt = userStat.getOrDefault(EmotionType.NEGATIVE, 0L);
+
+            return MatchTeamEmotionResponse.forUserTeam(
+                    match,
+                    userTeam,
+                    positiveCnt,
+                    negativeCnt
+            );
+        }
+
+        // 2. 응원팀 NONE → 홈/원정 팀별 퍼센트
+        double[] homePercent = calculatePercent(statMap.get(match.getHomeTeam()));
+        double[] awayPercent = calculatePercent(statMap.get(match.getAwayTeam()));
+
+        return MatchTeamEmotionResponse.forNoTeam(
+                match,
+                homePercent[0], homePercent[1],
+                awayPercent[0], awayPercent[1]
         );
     }
+
+    private double[] calculatePercent(Map<EmotionType, Long> stat) {
+
+        if (stat == null || stat.isEmpty()) {
+            return new double[]{0.0, 0.0};
+        }
+
+        long positive = stat.getOrDefault(EmotionType.POSITIVE, 0L);
+        long negative = stat.getOrDefault(EmotionType.NEGATIVE, 0L);
+        long total = positive + negative;
+
+        if (total == 0) {
+            return new double[]{0.0, 0.0};
+        }
+
+        return new double[]{
+                positive * 100.0 / total,
+                negative * 100.0 / total
+        };
+    }
+
+
+
+
+
 
 
     @Transactional(readOnly = true)
