@@ -1,5 +1,6 @@
 package com.example.ballog.domain.matchrecord.dto.response;
 
+import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.login.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Matches;
 import lombok.Getter;
@@ -22,11 +23,11 @@ public class MatchTeamEmotionResponse {
     private long totalPositiveCnt;
     private long totalNegativeCnt;
 
-    // NONE일 경우 (각 팀별 긍정/부정 퍼센테이지)
-    private Double homeTeamPositivePercent;
-    private Double homeTeamNegativePercent;
-    private Double awayTeamPositivePercent;
-    private Double awayTeamNegativePercent;
+    // NONE일 경우 (각 팀별 긍정/부정 퍼센테이지 및 대표 감정)
+    private EmotionType homeTeamEmotion;
+    private Double homeTeamPercent;
+    private EmotionType awayTeamEmotion;
+    private Double awayTeamPercent;
 
     public static MatchTeamEmotionResponse forUserTeam(
             Matches match,
@@ -43,17 +44,17 @@ public class MatchTeamEmotionResponse {
 
     public static MatchTeamEmotionResponse forNoTeam(
             Matches match,
-            double homePositive,
-            double homeNegative,
-            double awayPositive,
-            double awayNegative
+            EmotionType homeEmotion,
+            double homePercent,
+            EmotionType awayEmotion,
+            double awayPercent
     ) {
         MatchTeamEmotionResponse r = base(match);
         r.userTeam = BaseballTeam.NONE.name();
-        r.homeTeamPositivePercent = homePositive;
-        r.homeTeamNegativePercent = homeNegative;
-        r.awayTeamPositivePercent = awayPositive;
-        r.awayTeamNegativePercent = awayNegative;
+        r.homeTeamEmotion = homeEmotion;
+        r.homeTeamPercent = homePercent;
+        r.awayTeamEmotion = awayEmotion;
+        r.awayTeamPercent = awayPercent;
         return r;
     }
 
