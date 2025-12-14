@@ -17,6 +17,14 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     @Query("SELECT e FROM Emotion e WHERE e.matchRecord.matchrecordId = :recordId")
     List<Emotion> findByMatchRecordId(@Param("recordId") Long recordId);
 
+    @Query("""
+    select e.emotionType, count(e)
+    from Emotion e
+    where e.matchRecord.matchrecordId = :recordId
+    group by e.emotionType
+    """)
+    List<Object[]> countByEmotionType(@Param("recordId") Long recordId); //감정관련 쿼리 한번에 불러오기
+
     List<Emotion> findByUserId(Long userId);
 
     @Modifying
@@ -31,4 +39,6 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
                 WHERE u.baseballTeam = :baseballTeam
             """)
     List<Emotion> findByUserBaseballTeam(@Param("baseballTeam") BaseballTeam baseballTeam);
+
+
 }

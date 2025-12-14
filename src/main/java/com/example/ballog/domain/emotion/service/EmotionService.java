@@ -80,6 +80,7 @@ public class EmotionService {
                 .build();
     }
 
+
     private MatchRecord findAndValidateMatchRecord(Long recordId, Long currentUserId) {
         MatchRecord matchRecord = matchRecordRepository.findById(recordId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_RECORD));

@@ -138,6 +138,7 @@ public class KakaoOAuthService {
 
         HttpEntity<Void> request = new HttpEntity<>(headers);
         restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
     }
 
     @Transactional
