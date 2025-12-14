@@ -85,8 +85,6 @@ public class MatchRecordService {
         return getRecordDetail(record.getMatchrecordId(), currentUser);
     }
 
-
-
     @Transactional(readOnly = true)
     public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User user) {
 
@@ -132,21 +130,23 @@ public class MatchRecordService {
             );
         }
 
-        // 2. 응원팀 NONE → 홈/원정 팀별 퍼센트
-        double[] homePercent = calculatePercent(statMap.get(match.getHomeTeam()));
-        double[] awayPercent = calculatePercent(statMap.get(match.getAwayTeam()));
+        // 2. 응원팀 NONE → 홈/원정 팀별 퍼센트 및 우세 감정
+        Object[] home = calculateDominantEmotion(statMap.get(match.getHomeTeam()));
+        Object[] away = calculateDominantEmotion(statMap.get(match.getAwayTeam()));
 
         return MatchTeamEmotionResponse.forNoTeam(
                 match,
-                homePercent[0], homePercent[1],
-                awayPercent[0], awayPercent[1]
+                (EmotionType) home[0],
+                (Double) home[1],
+                (EmotionType) away[0],
+                (Double) away[1]
         );
     }
 
-    private double[] calculatePercent(Map<EmotionType, Long> stat) {
+    private Object[] calculateDominantEmotion(Map<EmotionType, Long> stat) {
 
         if (stat == null || stat.isEmpty()) {
-            return new double[]{0.0, 0.0};
+            return new Object[]{null, 0.0};
         }
 
         long positive = stat.getOrDefault(EmotionType.POSITIVE, 0L);
@@ -154,15 +154,20 @@ public class MatchRecordService {
         long total = positive + negative;
 
         if (total == 0) {
-            return new double[]{0.0, 0.0};
+            return new Object[]{null, 0.0};
         }
 
-        return new double[]{
-                positive * 100.0 / total,
-                negative * 100.0 / total
-        };
+        double positivePercent = positive * 100.0 / total;
+        double negativePercent = negative * 100.0 / total;
+
+        if (positivePercent >= negativePercent) {
+            return new Object[]{EmotionType.POSITIVE, positivePercent};
+        } else {
+            return new Object[]{EmotionType.NEGATIVE, negativePercent};
+        }
     }
-    
+
+
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
