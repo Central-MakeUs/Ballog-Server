@@ -18,20 +18,19 @@ import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MatchRecordService {
 
     @Value("${app.default-image-url}")
@@ -46,9 +45,7 @@ public class MatchRecordService {
     @Transactional
     public MatchRecordResponse createRecord(MatchRecordRequest request, User user) {
         Matches match = findMatch(request.getMatchesId());
-
         validateNotAlreadyRecorded(user, match);
-
         MatchRecord record = saveMatchRecord(user, match, request.getResult());
 
         return toMatchRecordResponse(record, match);
@@ -58,29 +55,27 @@ public class MatchRecordService {
     public MatchRecordDetailResponse getRecordDetail(Long recordId, User currentUser) {
         MatchRecord record = findRecordOwnedByUser(recordId, currentUser);
 
-        List<ImageInfo> imageList = getImageInfos(record);
         EmotionStats stats = calculateEmotionStats(recordId);
+        double positive = stats.positivePercent();
+        double negative = stats.negativePercent();
+
+        Map<EmotionType, Long> countMap;
+        countMap = emotionRepository.countByEmotionType(recordId).stream()
+                .collect(Collectors.toMap(
+                        row -> (EmotionType) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        long positiveCnt = countMap.getOrDefault(EmotionType.POSITIVE, 0L);
+        long negativeCnt = countMap.getOrDefault(EmotionType.NEGATIVE, 0L);
+
+
+        List<ImageInfo> imageList = getImageInfos(record);
         List<EmotionGroupInfo> emotionGroups = groupEmotions(recordId);
 
-        Matches match = record.getMatches();
-        return MatchRecordDetailResponse.builder()
-                .matchRecordId(record.getMatchrecordId())
-                .matchesId(match.getMatchesId())
-                .stadium(match.getStadium())
-                .homeTeam(match.getHomeTeam())
-                .awayTeam(match.getAwayTeam())
-                .matchDate(match.getMatchesDate())
-                .matchTime(match.getMatchesTime())
-                .userId(record.getUser().getUserId())
-                .watchCnt(record.getWatchCnt())
-                .result(record.getResult())
-                .baseballTeam(record.getBaseballTeam())
-                .positiveEmotionPercent(stats.positivePercent)
-                .negativeEmotionPercent(stats.negativePercent)
-                .imageList(imageList)
-                .emotionGroupList(emotionGroups)
-                .build();
+        return MatchRecordDetailResponse.from(record, positive, negative, positiveCnt, negativeCnt, imageList, emotionGroups);
     }
+
 
     public MatchRecordDetailResponse getRecordDetailByMatchId(Long matchId, User currentUser) {
         MatchRecord record = matchRecordRepository
@@ -90,50 +85,88 @@ public class MatchRecordService {
         return getRecordDetail(record.getMatchrecordId(), currentUser);
     }
 
+
+
     @Transactional(readOnly = true)
-    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User currentUser) {
-        Matches match = matchesRepository.findById(matchId)
-                .orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+    public MatchTeamEmotionResponse getTeamEmotionStatsByMatch(Long matchId, User user) {
 
-        BaseballTeam userTeam = currentUser.getBaseballTeam();
+        Matches match = matchesRepository.findById(matchId).orElseThrow(() -> new CustomException(ErrorCode.MATCH_NOT_FOUND));
+        BaseballTeam userTeam = user.getBaseballTeam();
 
-        //응원팀이 설정된 경우 (NONE이 아님)
-        if (userTeam != null && userTeam != BaseballTeam.NONE) {
-            EmotionStats teamStats = calculateEmotionStatsByTeam(userTeam);
-            List<EmotionGroupInfo> teamEmotionGroups = groupEmotionsByTeam(userTeam);
+        // NONE 제외 + 홈/원정 팀만 긍정/부정 집계
+        List<Object[]> rows =
+                emotionRepository.countEmotionByMatchExcludeNone(
+                        matchId,
+                        match.getHomeTeam(),
+                        match.getAwayTeam(),
+                        BaseballTeam.NONE
+                );
 
-            return MatchTeamEmotionResponse.builder()
-                    .matchId(match.getMatchesId())
-                    .stadium(match.getStadium().name())
-                    .homeTeam(match.getHomeTeam().name())
-                    .awayTeam(match.getAwayTeam().name())
-                    .matchDate(match.getMatchesDate())
-                    .matchTime(match.getMatchesTime())
-                    .userTeam(userTeam.name())
-                    .positiveEmotionPercent(teamStats.positivePercent)
-                    .negativeEmotionPercent(teamStats.negativePercent)
-                    .emotionGroupList(teamEmotionGroups)
-                    .build();
+        // team -> emotionType -> count
+        Map<BaseballTeam, Map<EmotionType, Long>> statMap = new EnumMap<>(BaseballTeam.class);
+
+        for (Object[] row : rows) {
+            BaseballTeam team = (BaseballTeam) row[0];
+            EmotionType type = (EmotionType) row[1];
+            Long count = (Long) row[2];
+
+            statMap
+                    .computeIfAbsent(team, t -> new EnumMap<>(EmotionType.class))
+                    .put(type, count);
+
         }
 
-        //응원팀이 NONE인 경우 → 경기의 홈팀, 어웨이팀별 통계 반환
-        EmotionStats homeStats = calculateEmotionStatsByTeam(match.getHomeTeam());
-        EmotionStats awayStats = calculateEmotionStatsByTeam(match.getAwayTeam());
+        //1. 응원팀 있는 경우 → 해당 팀의 긍/부정 "개수"
+        if (userTeam != null && userTeam != BaseballTeam.NONE) {
 
-        return MatchTeamEmotionResponse.builder()
-                .matchId(match.getMatchesId())
-                .stadium(match.getStadium().name())
-                .homeTeam(match.getHomeTeam().name())
-                .awayTeam(match.getAwayTeam().name())
-                .matchDate(match.getMatchesDate())
-                .matchTime(match.getMatchesTime())
-                .userTeam("NONE")
-                .homeTeamPositivePercent(homeStats.positivePercent)
-                .homeTeamNegativePercent(homeStats.negativePercent)
-                .awayTeamPositivePercent(awayStats.positivePercent)
-                .awayTeamNegativePercent(awayStats.negativePercent)
-                .build();
+            Map<EmotionType, Long> userStat = statMap.getOrDefault(userTeam, Map.of());
+
+            long positiveCnt = userStat.getOrDefault(EmotionType.POSITIVE, 0L);
+            long negativeCnt = userStat.getOrDefault(EmotionType.NEGATIVE, 0L);
+
+            return MatchTeamEmotionResponse.forUserTeam(
+                    match,
+                    userTeam,
+                    positiveCnt,
+                    negativeCnt
+            );
+        }
+
+        // 2. 응원팀 NONE → 홈/원정 팀별 퍼센트
+        double[] homePercent = calculatePercent(statMap.get(match.getHomeTeam()));
+        double[] awayPercent = calculatePercent(statMap.get(match.getAwayTeam()));
+
+        return MatchTeamEmotionResponse.forNoTeam(
+                match,
+                homePercent[0], homePercent[1],
+                awayPercent[0], awayPercent[1]
+        );
     }
+
+    private double[] calculatePercent(Map<EmotionType, Long> stat) {
+
+        if (stat == null || stat.isEmpty()) {
+            return new double[]{0.0, 0.0};
+        }
+
+        long positive = stat.getOrDefault(EmotionType.POSITIVE, 0L);
+        long negative = stat.getOrDefault(EmotionType.NEGATIVE, 0L);
+        long total = positive + negative;
+
+        if (total == 0) {
+            return new double[]{0.0, 0.0};
+        }
+
+        return new double[]{
+                positive * 100.0 / total,
+                negative * 100.0 / total
+        };
+    }
+
+
+
+
+
 
 
     @Transactional(readOnly = true)
@@ -146,14 +179,9 @@ public class MatchRecordService {
                 .map(this::toSummaryResponse)
                 .toList();
 
-        return MatchRecordListResponse.builder()
-                .totalCount(records.size())
-                .winRate(winStats.winRate)
-                .totalPositiveEmotionPercent(emotionStats.positivePercent)
-                .totalNegativeEmotionPercent(emotionStats.negativePercent)
-                .records(recordResponses)
-                .build();
+        return MatchRecordListResponse.from( records.size(), winStats.winRate(), emotionStats.positivePercent(), emotionStats.negativePercent(), recordResponses);
     }
+
 
     @Transactional
     public void deleteRecord(Long recordId, User user) {
@@ -180,30 +208,13 @@ public class MatchRecordService {
 
     private MatchRecord saveMatchRecord(User user, Matches match, Result result) {
         long count = matchRecordRepository.countByUser(user);
-        MatchRecord record = new MatchRecord();
-        record.setMatches(match);
-        record.setUser(user);
-        record.setWatchCnt(count + 1);
-        record.setResult(result);
-        record.setBaseballTeam(user.getBaseballTeam());
-        record.setDefaultImageUrl(defaultImageUrl);
-        return matchRecordRepository.save(record);
+
+        return matchRecordRepository.save(new MatchRecord(null, match, user, count + 1, result, user.getBaseballTeam(), defaultImageUrl)
+        );
     }
 
     private MatchRecordResponse toMatchRecordResponse(MatchRecord record, Matches match) {
-        return MatchRecordResponse.builder()
-                .matchRecordId(record.getMatchrecordId())
-                .matchesId(match.getMatchesId())
-                .homeTeam(match.getHomeTeam())
-                .awayTeam(match.getAwayTeam())
-                .matchDate(match.getMatchesDate())
-                .matchTime(match.getMatchesTime())
-                .userId(record.getUser().getUserId())
-                .watchCnt(record.getWatchCnt())
-                .result(record.getResult())
-                .baseballTeam(record.getBaseballTeam())
-                .defaultImageUrl(record.getDefaultImageUrl())
-                .build();
+        return MatchRecordResponse.from(record, match);
     }
 
     private MatchRecord findRecordOwnedByUser(Long recordId, User currentUser) {
@@ -266,30 +277,14 @@ public class MatchRecordService {
         return groups;
     }
 
-    private WinStats calculateWinStats(List<MatchRecord> records) {
-        long winCount = records.stream().filter(r -> r.getResult() == Result.WIN).count();
-        double winRate = records.isEmpty() ? 0.0 : (winCount * 100.0) / records.size();
-        return new WinStats(winRate);
-    }
-
     private MatchRecordSummaryResponse toSummaryResponse(MatchRecord record) {
         Matches match = record.getMatches();
-        return MatchRecordSummaryResponse.builder()
-                .matchRecordId(record.getMatchrecordId())
-                .matchesId(match.getMatchesId())
-                .stadium(match.getStadium())
-                .homeTeam(match.getHomeTeam())
-                .awayTeam(match.getAwayTeam())
-                .matchDate(match.getMatchesDate())
-                .matchTime(match.getMatchesTime())
-                .userId(record.getUser().getUserId())
-                .watchCnt(record.getWatchCnt())
-                .result(record.getResult())
-                .baseballTeam(record.getBaseballTeam())
-                .build();
+
+        return MatchRecordSummaryResponse.from(record);
+
     }
 
-    private void deleteAssociatedData(MatchRecord record) {
+    private void deleteAssociatedData(MatchRecord record) {//FK로 연관되어 있는 것들 먼저 삭제
         List<Image> images = imageRepository.findAllByMatchRecord(record);
         images.forEach(img -> s3Service.deleteFileFromS3(img.getImageUrl()));
         emotionRepository.deleteAllByMatchRecord(record);
@@ -343,7 +338,12 @@ public class MatchRecordService {
         return groups;
     }
 
-
-
+    private WinStats calculateWinStats(List<MatchRecord> records) {
+        long winCount = records.stream().filter(r -> r.getResult() == Result.WIN).count();
+        double winRate = records.isEmpty() ? 0.0 : (winCount * 100.0) / records.size();
+        return new WinStats(winRate);
+    }
     private record WinStats(double winRate) {}
+
+
 }
