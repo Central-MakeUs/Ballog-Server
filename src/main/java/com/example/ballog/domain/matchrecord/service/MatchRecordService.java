@@ -162,13 +162,7 @@ public class MatchRecordService {
                 negative * 100.0 / total
         };
     }
-
-
-
-
-
-
-
+    
     @Transactional(readOnly = true)
     public MatchRecordListResponse getAllRecordsByUser(User user) {
         List<MatchRecord> records = matchRecordRepository.findAllByUserOrderByMatchrecordIdDesc(user);
