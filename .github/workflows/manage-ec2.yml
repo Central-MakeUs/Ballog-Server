@@ -1,0 +1,40 @@
+name: EC2 Start and Stop
+
+on:
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  manage-ec2:
+    runs-on: ubuntu-latest
+    steps:
+      # 1️⃣ AWS 자격증명 설정
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # 2️⃣ EC2 Start
+      - name: Start EC2
+        run: |
+          INSTANCE_ID=${{ secrets.INSTANCE_ID }}
+          echo "Starting EC2 instance $INSTANCE_ID..."
+          aws ec2 start-instances --instance-ids $INSTANCE_ID
+          aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+          echo "EC2 is running."
+
+      # 3️⃣ 1시간 대기
+      - name: Wait 1 hour
+        run: |
+          echo "Waiting 1 hour before stopping EC2..."
+          sleep 3600
+
+      # 4️⃣ EC2 Stop
+      - name: Stop EC2
+        run: |
+          INSTANCE_ID=${{ secrets.INSTANCE_ID }}
+          echo "Stopping EC2 instance $INSTANCE_ID..."
+          aws ec2 stop-instances --instance-ids $INSTANCE_ID
+          aws ec2 wait instance-stopped --instance-ids $INSTANCE_ID
+          echo "EC2 stopped."
