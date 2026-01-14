@@ -28,7 +28,7 @@ jobs:
       - name: Wait 1 hour
         run: |
           echo "Waiting 1 hour before stopping EC2..."
-          sleep 3600
+          sleep 300
 
       # 4️⃣ EC2 Stop
       - name: Stop EC2
