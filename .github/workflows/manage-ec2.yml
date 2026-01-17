@@ -1,13 +1,13 @@
-name: EC2 Start and Stop
+name: EC2 Start/Stop + Docker & Discord Webhook
 
 on:
-  workflow_dispatch: # 수동 실행 가능
+  workflow_dispatch:
 
 jobs:
   manage-ec2:
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ AWS 자격증명 설정
+      # AWS 자격증명
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -15,7 +15,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      # 2️⃣ EC2 Start
+      # EC2 시작
       - name: Start EC2
         run: |
           INSTANCE_ID=${{ secrets.INSTANCE_ID }}
@@ -24,13 +24,48 @@ jobs:
           aws ec2 wait instance-running --instance-ids $INSTANCE_ID
           echo "EC2 is running."
 
-      # 3️⃣ 1시간 대기
+      # public IP 가져오기
+      - name: Get Public IP
+        id: get_ip
+        run: |
+          INSTANCE_ID=${{ secrets.INSTANCE_ID }}
+          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID \
+            --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+          echo "Public IP: $PUBLIC_IP"
+
+      # iscord 웹훅 알림 (PUTTY/SSH 명령 포함)
+      - name: Send Discord Webhook
+        run: |
+          SSH_COMMAND="ssh -i path/to/key.pem ubuntu@$PUBLIC_IP"
+          MESSAGE="🚀 EC2 is running!\n\n🌐 Public IP: $PUBLIC_IP\n\n💻 SSH 접속 명령 (PUTTY나 터미널에서 복사해서 사용):\n$SSH_COMMAND"
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\":\"$MESSAGE\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      #  SSH로 Docker Compose 실행 + Nginx 재시작
+      - name: Start Docker & Nginx on EC2
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ env.PUBLIC_IP }}
+          username: ubuntu
+          key: ${{ secrets.EC2_PEM }}
+          port: 22
+          script: |
+            echo "Starting Docker Compose service..."
+            sudo systemctl start ballog-app.service
+            sudo systemctl status ballog-app.service
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx
+            echo "✅ Docker & Nginx started."
+
+      # 1시간 대기
       - name: Wait 1 hour
         run: |
           echo "Waiting 1 hour before stopping EC2..."
-          sleep 3600
+          sleep 300
 
-      # 4️⃣ EC2 Stop
+      # EC2 Stop
       - name: Stop EC2
         run: |
           INSTANCE_ID=${{ secrets.INSTANCE_ID }}
