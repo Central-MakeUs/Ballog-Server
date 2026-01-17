@@ -1,4 +1,4 @@
-name: EC2 Start/Stop + Docker & Discord Webhook
+name: EC2 Start/Stop 
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   manage-ec2:
     runs-on: ubuntu-latest
+
     steps:
       # AWS 자격증명
       - name: Configure AWS credentials
@@ -14,6 +15,23 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
+
+      # 🔐 GitHub Actions 러너 공인 IP 조회
+      - name: Get Runner Public IP
+        id: runner_ip
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
+          echo "Runner IP: $RUNNER_IP"
+
+      # 🔐 보안 그룹에 SSH 임시 허용
+      - name: Allow SSH from GitHub Runner
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $RUNNER_IP/32
 
       # EC2 시작
       - name: Start EC2
@@ -24,26 +42,26 @@ jobs:
           aws ec2 wait instance-running --instance-ids $INSTANCE_ID
           echo "EC2 is running."
 
-      # public IP 가져오기
-      - name: Get Public IP
-        id: get_ip
+      # EC2 Public IP 가져오기
+      - name: Get EC2 Public IP
         run: |
           INSTANCE_ID=${{ secrets.INSTANCE_ID }}
-          PUBLIC_IP=$(aws ec2 describe-instances --instance-ids $INSTANCE_ID \
-            --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          PUBLIC_IP=$(aws ec2 describe-instances \
+            --instance-ids $INSTANCE_ID \
+            --query 'Reservations[0].Instances[0].PublicIpAddress' \
+            --output text)
           echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
-          echo "Public IP: $PUBLIC_IP"
+          echo "EC2 Public IP: $PUBLIC_IP"
 
-      # iscord 웹훅 알림 (PUTTY/SSH 명령 포함)
+      # Discord 웹훅 알림
       - name: Send Discord Webhook
         run: |
-          SSH_COMMAND="ssh -i path/to/key.pem ubuntu@$PUBLIC_IP"
-          MESSAGE="🚀 EC2 is running!\n\n🌐 Public IP: $PUBLIC_IP\n\n💻 SSH 접속 명령 (PUTTY나 터미널에서 복사해서 사용):\n$SSH_COMMAND"
+          MESSAGE="🚀 EC2 is running!\n\n🌐 Public IP: $PUBLIC_IP\n\n💻 SSH 접속:\nssh -i key.pem ubuntu@$PUBLIC_IP"
           curl -H "Content-Type: application/json" \
                -d "{\"content\":\"$MESSAGE\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
 
-      #  SSH로 Docker Compose 실행 + Nginx 재시작
+      # SSH 접속 → Docker / Nginx 실행
       - name: Start Docker & Nginx on EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -52,24 +70,29 @@ jobs:
           key: ${{ secrets.EC2_PEM }}
           port: 22
           script: |
-            echo "Starting Docker Compose service..."
+            echo "Starting service..."
             sudo systemctl start ballog-app.service
-            sudo systemctl status ballog-app.service
-            echo "Restarting Nginx..."
             sudo systemctl restart nginx
-            echo "✅ Docker & Nginx started."
+            echo "✅ Service started."
 
-      # 1시간 대기
-      - name: Wait 1 hour
-        run: |
-          echo "Waiting 1 hour before stopping EC2..."
-          sleep 300
+      # 테스트용 대기 (5분)
+      - name: Wait
+        run: sleep 300
 
-      # EC2 Stop
+      # EC2 중지
       - name: Stop EC2
         run: |
           INSTANCE_ID=${{ secrets.INSTANCE_ID }}
-          echo "Stopping EC2 instance $INSTANCE_ID..."
           aws ec2 stop-instances --instance-ids $INSTANCE_ID
           aws ec2 wait instance-stopped --instance-ids $INSTANCE_ID
           echo "EC2 stopped."
+
+      # 🔐 보안 그룹 SSH 규칙 제거 (무조건 실행)
+      - name: Revoke SSH from GitHub Runner
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr $RUNNER_IP/32
