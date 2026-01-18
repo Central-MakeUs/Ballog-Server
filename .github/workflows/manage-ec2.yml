@@ -75,9 +75,9 @@ jobs:
             sudo systemctl restart nginx
             echo "✅ Service started."
 
-      # 테스트용 대기 (5분)
+      # 대기 (60분)
       - name: Wait
-        run: sleep 300
+        run: sleep 3600
 
       # EC2 중지
       - name: Stop EC2
