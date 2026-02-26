@@ -39,6 +39,9 @@ public enum ErrorCode {
     MATCH_NOT_FOUND(408,"MATCH001","해당 경기 정보를 찾을 수 없습니다."),
     MATCH_RESULT_FORMAT_INVALID(413,"MATCH002", "경기 결과 형식이 잘못되었습니다. 예: 5:3"),
 
+    //TEAM
+    TEAM_CODE_INVALID(400, "TEAM001", "유효하지 않은 팀 코드입니다."),
+
 
     //MATCH_RECORD
     NOT_FOUND_RECORD(408,"RECORD001","해당 직관기록을 찾을 수 없습니다."),

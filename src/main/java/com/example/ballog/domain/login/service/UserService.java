@@ -14,7 +14,6 @@ import com.example.ballog.domain.login.entity.TermAgree;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.repository.*;
 import com.example.ballog.domain.login.security.CustomUserDetails;
-import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.repository.MatchRecordRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
@@ -30,7 +29,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -102,8 +100,6 @@ public class UserService {
 
 
     public ResponseEntity<BasicResponse<Object>> processLogin(User user, boolean isSignup) {
-
-
         String refreshToken = tokenService.createRefreshToken(user); //회원가입 -> 뒤로가기 -> 재로그인경우를 고려해 무조건 새로 발급받은걸로 저장
         tokenService.saveRefreshToken(user, refreshToken);
 
@@ -137,9 +133,8 @@ public class UserService {
         });
     }
 
-
     @Transactional
-        public void withdraw(Long userId) {
+    public void withdraw(Long userId) {
 
         alertRepository.deleteAllByUserUserId(userId);
         emotionRepository.deleteAllByUserUserId(userId);

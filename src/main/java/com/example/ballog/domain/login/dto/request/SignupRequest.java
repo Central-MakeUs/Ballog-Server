@@ -1,6 +1,6 @@
 package com.example.ballog.domain.login.dto.request;
 
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import lombok.Getter;
 import lombok.Setter;
 

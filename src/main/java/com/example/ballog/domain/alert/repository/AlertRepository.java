@@ -1,7 +1,7 @@
 package com.example.ballog.domain.alert.repository;
 
 import com.example.ballog.domain.alert.entity.Alert;
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -7,10 +7,16 @@ import com.example.ballog.domain.login.repository.OAuthTokenRepository;
 import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.global.common.exception.CustomException;
 import com.example.ballog.global.common.exception.enums.ErrorCode;
-import org.bouncycastle.util.io.pem.PemReader;
-import org.bouncycastle.util.io.pem.PemObject;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.parser.ParseException;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import java.security.interfaces.ECPublicKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +30,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -42,6 +47,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AppleOAuthService {
 
@@ -62,6 +68,8 @@ public class AppleOAuthService {
 
     @Value("${spring.security.oauth2.client.registration.apple.redirect-uri}")
     private String appleUri;
+
+    private static final String APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys";
 
 
     private final static String APPLE_AUTH_URL = "https://appleid.apple.com";
@@ -169,6 +177,8 @@ public class AppleOAuthService {
 
         return jwt.serialize();
     }
+
+
     public byte[] getPrivateKey() throws Exception {
         if (appleKeyPath == null || appleKeyPath.isEmpty()) {
             throw new Exception("애플 개인 키가 설정되어 있지 않습니다.");
@@ -188,13 +198,11 @@ public class AppleOAuthService {
     }
 
 
-
     public ECPrivateKey getECPrivateKey(byte[] privateKeyBytes) throws Exception {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
         KeyFactory kf = KeyFactory.getInstance("EC");
         return (ECPrivateKey) kf.generatePrivate(keySpec);
     }
-
 
     //애플 로그인 연결 끊기
     public void logoutFromApple(String refreshToken) {
@@ -226,6 +234,48 @@ public class AppleOAuthService {
             throw new CustomException(ErrorCode.APPLE_REVOKE_FAILED, e.getMessage());
         }
     }
+
+    /**
+     * Apple Server-to-Server Notification JWT 검증
+     * @param jwtToken Apple에서 보내온 JWT
+     * @return claims payload
+     * @throws Exception JWT 검증 실패 시 예외 발생
+     */
+    public JWTClaimsSet verifyAppleNotification(String jwtToken) throws Exception {
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(jwtToken);
+
+            // Apple 공개 키 가져오기
+            JWKSet jwkSet = JWKSet.load(new URL(APPLE_JWKS_URL));
+            JWK jwk = jwkSet.getKeyByKeyId(signedJWT.getHeader().getKeyID());
+
+            if (jwk == null) {
+                throw new IllegalArgumentException("Apple JWT 키를 찾을 수 없습니다.");
+            }
+
+            if (!(jwk instanceof ECKey ecKey)) {
+                throw new IllegalArgumentException("Apple JWT 키가 ECKey 타입이 아닙니다.");
+            }
+
+            // ECKey에서 공개키 가져오기
+            ECPublicKey publicKey = ecKey.toECPublicKey();
+
+            // ECDSAVerifier 생성
+            ECDSAVerifier verifier = new ECDSAVerifier(publicKey);
+            boolean verified = signedJWT.verify(verifier);
+
+            if (!verified) {
+                throw new IllegalArgumentException("Apple JWT 서명 검증 실패");
+            }
+            return signedJWT.getJWTClaimsSet();
+
+        } catch (java.text.ParseException | com.nimbusds.jose.JOSEException e) {
+            log.error("Apple JWT 검증 실패", e);
+            throw new IllegalArgumentException("유효하지 않은 Apple JWT");
+        }
+
+    }
+
 
     private static HttpRequest.BodyPublisher buildFormData(Map<String, String> data) {
         StringBuilder form = new StringBuilder();

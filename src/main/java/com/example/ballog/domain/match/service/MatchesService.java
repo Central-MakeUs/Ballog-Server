@@ -1,7 +1,7 @@
 package com.example.ballog.domain.match.service;
 
 import com.example.ballog.domain.alert.service.MatchAlertSetupService;
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;

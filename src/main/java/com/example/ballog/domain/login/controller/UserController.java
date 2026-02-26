@@ -14,6 +14,9 @@ import com.example.ballog.global.common.exception.enums.ErrorCode;
 import com.example.ballog.global.common.message.ApiErrorResponse;
 import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.JWTClaimsSet;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -252,6 +255,64 @@ public class UserController {
                     .body(BasicResponse.ofFailure(e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
+
+    /**
+     * Apple Server-to-Server Notification
+     */
+    @PostMapping("/auth/apple/notifications")
+    @ResponseBody
+    public ResponseEntity<String> handleAppleNotification(@RequestBody String jwtToken) {
+        try {
+            log.info("Apple Notification JWT: {}", jwtToken);
+
+            // 1️⃣ JWT 검증
+            JWTClaimsSet claims = appleOAuthService.verifyAppleNotification(jwtToken);
+
+            // 2️⃣ 필수 정보 추출
+            String appleSub = claims.getStringClaim("sub");
+            String eventType = claims.getStringClaim("notification_type"); // Apple 서버 event
+            if (appleSub == null || eventType == null) {
+                log.warn("Apple Notification 필수 정보 없음");
+                return ResponseEntity.badRequest().body("Invalid payload");
+            }
+
+            // 3️⃣ 사용자 찾기
+            User user = userService.findByAppleProviderId(appleSub);
+            if (user == null) {
+                log.warn("Apple Notification: 사용자 없음, sub={}", appleSub);
+                return ResponseEntity.ok("User not found");
+            }
+
+            // 4️⃣ 이벤트 처리
+            switch (eventType) {
+                case "EMAIL_UPDATED":  // Apple 이메일 변경 이벤트
+                    String newEmail = claims.getStringClaim("email");
+                    if (newEmail != null) {
+                        UpdateUserRequest updateRequest = new UpdateUserRequest();
+                        updateRequest.setEmail(newEmail);
+                        userService.updateUser(user.getUserId(), updateRequest);
+                        log.info("Apple Notification: 이메일 변경 처리 완료, userId={}", user.getUserId());
+                    }
+                    break;
+
+                case "ACCOUNT_DELETE":  // Apple 계정 삭제 이벤트
+                    userService.withdraw(user.getUserId());
+                    log.info("Apple Notification: 계정 삭제 처리 완료, userId={}", user.getUserId());
+                    break;
+
+                default:
+                    log.info("Apple Notification: 처리할 이벤트 없음, type={}", eventType);
+            }
+
+            return ResponseEntity.ok("Notification processed");
+
+        } catch (Exception e) {
+            log.error("Apple Notification 처리 실패", e);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("JWT verification failed");
+        }
+    }
+
+
 
 
 

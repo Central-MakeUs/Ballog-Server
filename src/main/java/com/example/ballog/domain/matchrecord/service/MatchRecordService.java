@@ -6,7 +6,7 @@ import com.example.ballog.domain.Image.service.S3Service;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
