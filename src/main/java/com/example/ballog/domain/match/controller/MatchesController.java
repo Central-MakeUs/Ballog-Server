@@ -1,9 +1,11 @@
 package com.example.ballog.domain.match.controller;
 
 import com.example.ballog.domain.alert.service.MatchAlertSetupService;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.Role;
 import com.example.ballog.domain.login.security.CustomUserDetails;
 import com.example.ballog.domain.match.dto.request.MatchesRequest;
+import com.example.ballog.domain.match.dto.request.UpdateTeamRankRequest;
 import com.example.ballog.domain.match.dto.response.MatchesGroupedResponse;
 import com.example.ballog.domain.match.dto.response.MatchesResponse;
 import com.example.ballog.domain.match.dto.response.MatchesWithResponse;
@@ -15,6 +17,7 @@ import com.example.ballog.global.common.message.ApiErrorResponses;
 import com.example.ballog.global.common.message.BasicResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -141,6 +144,24 @@ public class MatchesController {
                 BasicResponse.ofSuccess("경기일정 삭제 성공")
         );
     }
+
+    @PostMapping("/rank")
+    @Operation(summary = "KBO 순위", description = "KBO 순위 - 관리자가 조정")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED),
+            @ApiErrorResponse(ErrorCode.ACCESS_DENIED),
+            @ApiErrorResponse(ErrorCode.TEAM_CODE_INVALID)
+    })
+    public ResponseEntity<String> updateTeamRank(@RequestBody @Valid UpdateTeamRankRequest request) {
+        try {
+            BaseballTeam team = BaseballTeam.valueOf(request.getTeamCode());
+            BaseballTeam.updateTeamRank(team, request.getNewRank());
+            return ResponseEntity.ok("팀 순위가 업데이트되었습니다.");
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.TEAM_CODE_INVALID);
+        }
+    }
+
 
     // 사용자 인증 및 관리자 권한 검증
     private void validateAdmin(CustomUserDetails userDetails) {

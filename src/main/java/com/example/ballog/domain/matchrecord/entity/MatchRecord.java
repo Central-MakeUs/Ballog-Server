@@ -1,6 +1,6 @@
 package com.example.ballog.domain.matchrecord.entity;
 
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.match.entity.Matches;
 import jakarta.persistence.*;

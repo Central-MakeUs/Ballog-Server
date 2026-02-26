@@ -1,7 +1,9 @@
 package com.example.ballog.domain.matchrecord.controller;
 
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
 import com.example.ballog.domain.login.security.CustomUserDetails;
+import com.example.ballog.domain.match.dto.response.TeamRankResponse;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordDetailResponse;
 import com.example.ballog.domain.matchrecord.dto.response.MatchRecordListResponse;
@@ -20,6 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -105,6 +110,23 @@ public class MatchRecordController {
         matchRecordService.deleteRecord(recordId, user);
 
         return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 삭제 성공"));
+    }
+
+    @GetMapping("/rank")
+    @Operation(summary = "KBO 순위 조회", description = "현재 KBO 팀 순위를 확인")
+    @ApiErrorResponses({
+            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
+    })
+    public ResponseEntity<List<TeamRankResponse>> getTeamRanks() {
+        List<TeamRankResponse> ranks = BaseballTeam.getRankedTeams().stream()
+                .map(entry -> new TeamRankResponse(
+                        entry.getKey().name(),
+                        entry.getValue().getRank(),
+                        entry.getValue().getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ranks);
     }
 
     private User getAuthenticatedUser(CustomUserDetails userDetails) {
