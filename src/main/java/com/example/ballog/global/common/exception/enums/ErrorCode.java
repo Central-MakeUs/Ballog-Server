@@ -59,7 +59,14 @@ public enum ErrorCode {
 
     //ALERT
     ALERT_NOT_FOUND(414, "ALERT_001", "해당 사용자의 알림 설정이 존재하지 않습니다."),
-    INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
+    INTERNAL_SERVER_ERROR(500, "INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다."),
+
+    //FRIEND
+    FRIEND_REQUEST_NOT_ALLOWED(400, "FRIEND_001", "친구 요청을 보낼 수 없습니다."),
+    ALREADY_FRIEND(409, "FRIEND_002", "이미 친구입니다."),
+    ALREADY_REQUESTED(409, "FRIEND_003", "이미 친구 요청을 보냈습니다."),
+    FRIEND_REQUEST_NOT_FOUND(404, "FRIEND_004", "해당 친구 요청이 존재하지 않습니다."),
+    INVALID_FRIEND_REQUEST(400, "FRIEND_005", "잘못된 요청입니다.");
 
 
     private int status;
