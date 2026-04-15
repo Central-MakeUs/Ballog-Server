@@ -1,12 +1,11 @@
 package com.example.ballog.domain.matchrecord.dto.response;
 
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.entity.Stadium;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
 import com.example.ballog.domain.matchrecord.entity.Result;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDate;

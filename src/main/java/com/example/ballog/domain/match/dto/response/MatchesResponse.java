@@ -1,6 +1,6 @@
 package com.example.ballog.domain.match.dto.response;
 
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.entity.Stadium;
 import com.example.ballog.domain.match.entity.Status;
@@ -8,7 +8,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 @Data

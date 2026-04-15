@@ -1,7 +1,7 @@
 package com.example.ballog.domain.matchrecord.dto.response;
 
 import com.example.ballog.domain.emotion.entity.EmotionType;
-import com.example.ballog.domain.login.entity.BaseballTeam;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.match.entity.Matches;
 import lombok.Getter;
 

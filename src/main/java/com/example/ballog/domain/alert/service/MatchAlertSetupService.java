@@ -1,11 +1,7 @@
 package com.example.ballog.domain.alert.service;
 
-import com.example.ballog.domain.alert.entity.Alert;
 import com.example.ballog.domain.alert.repository.AlertRepository;
 import com.example.ballog.domain.alert.scheduler.FcmSchedulerService;
-import com.example.ballog.domain.login.entity.BaseballTeam;
-import com.example.ballog.domain.login.entity.User;
-import com.example.ballog.domain.login.repository.UserRepository;
 import com.example.ballog.domain.match.entity.Matches;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

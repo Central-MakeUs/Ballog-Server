@@ -1,5 +1,6 @@
 package com.example.ballog.domain.login.entity;
 
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
