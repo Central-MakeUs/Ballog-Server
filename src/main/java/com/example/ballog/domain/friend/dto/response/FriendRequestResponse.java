@@ -8,4 +8,7 @@ import lombok.Getter;
 public class FriendRequestResponse {
     private Long requesterId;
     private String nickname;
+
+    private String baseballTeam;
+    private String emotion; // POSITIVE / NEUTRAL / NEGATIVE
 }

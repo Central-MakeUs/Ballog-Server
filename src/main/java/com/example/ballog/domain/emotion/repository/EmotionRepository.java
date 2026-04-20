@@ -67,8 +67,19 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
             """)
     List<Emotion> findByUserBaseballTeam(@Param("baseballTeam") BaseballTeam baseballTeam);
 
+    interface EmotionCountProjection {
+        Long getUserId();
+        Long getPositiveCnt();
+        Long getNegativeCnt();
+    }
 
-
-
-
+    @Query("""
+    SELECT e.userId as userId,
+           SUM(CASE WHEN e.emotionType = com.example.ballog.domain.emotion.entity.EmotionType.POSITIVE THEN 1 ELSE 0 END) as positiveCnt,
+           SUM(CASE WHEN e.emotionType = com.example.ballog.domain.emotion.entity.EmotionType.NEGATIVE THEN 1 ELSE 0 END) as negativeCnt
+    FROM Emotion e
+    WHERE e.userId IN :userIds
+    GROUP BY e.userId
+    """)
+    List<EmotionCountProjection> countEmotionByUserIds(@Param("userIds") List<Long> userIds);
 }

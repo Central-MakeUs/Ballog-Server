@@ -1,6 +1,7 @@
 package com.example.ballog.domain.friend.service;
 
 import com.example.ballog.domain.alert.service.AlertService;
+import com.example.ballog.domain.emotion.repository.EmotionRepository;
 import com.example.ballog.domain.friend.dto.response.FriendRequestResponse;
 import com.example.ballog.domain.friend.dto.response.FriendResponse;
 import com.example.ballog.domain.friend.entity.Friend;
@@ -28,6 +29,7 @@ public class FriendService {
     private final UserRepository userRepository;
     private final FriendRepository friendRepository;
     private final FriendRequestRepository friendRequestRepository;
+    private final EmotionRepository emotionRepository;
     private final AlertService alertService;
 
     // 친구요청-> 거절 -> 재요청 가능
@@ -147,15 +149,33 @@ public class FriendService {
                 .stream()
                 .collect(Collectors.toMap(User::getUserId, u -> u));
 
+        // 감정 Map 추가
+        Map<Long, String> emotionMap =
+                emotionRepository.countEmotionByUserIds(requesterIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                EmotionRepository.EmotionCountProjection::getUserId,
+                                e -> calculateEmotion(e.getPositiveCnt(), e.getNegativeCnt())
+                        ));
+
+
+
+
         return requests.stream()
                 .map(req -> {
                     User user = userMap.get(req.getRequesterId());
-                    return new FriendRequestResponse(req.getRequesterId(), user.getNickname());
+
+                    return new FriendRequestResponse(
+                            req.getRequesterId(),
+                            user.getNickname(),
+                            user.getBaseballTeam().name(),
+                            emotionMap.getOrDefault(req.getRequesterId(), "NEUTRAL")
+                    );
                 })
                 .toList();
     }
 
-    // 찬구 목록 조회
+    // 친구 목록 조회
     @Transactional(readOnly = true)
     public List<FriendResponse> getFriends(Long userId) {
 
@@ -171,13 +191,39 @@ public class FriendService {
 
         List<User> users = userRepository.findByUserIdIn(friendIds);
 
+        Map<Long, String> emotionMap =
+                emotionRepository.countEmotionByUserIds(friendIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                EmotionRepository.EmotionCountProjection::getUserId,
+                                e -> calculateEmotion(e.getPositiveCnt(), e.getNegativeCnt())
+                        ));
+
+
         return users.stream()
                 .map(u -> new FriendResponse(
                         u.getUserId(),
                         u.getNickname(),
-                        u.getBaseballTeam().name()
+                        u.getBaseballTeam().name(),
+                        emotionMap.getOrDefault(u.getUserId(), "NEUTRAL")
                 ))
                 .toList();
+
+    }
+
+    // 감정 계산
+    private String calculateEmotion(Long positive, Long negative) {
+        long p = positive == null ? 0 : positive;
+        long n = negative == null ? 0 : negative;
+        long total = p + n;
+
+        if (total == 0) return "NEUTRAL";
+
+        double ratio = (double) p / total;
+
+        if (ratio >= 0.6) return "POSITIVE";
+        if (ratio <= 0.4) return "NEGATIVE";
+        return "NEUTRAL";
     }
 
 
