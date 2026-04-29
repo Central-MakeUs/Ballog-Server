@@ -112,22 +112,31 @@ public class MatchRecordController {
         return ResponseEntity.ok(BasicResponse.ofSuccess("직관 기록 삭제 성공"));
     }
 
+//    @GetMapping("/rank")
+//    @Operation(summary = "KBO 순위 조회", description = "현재 KBO 팀 순위를 확인")
+//    @ApiErrorResponses({
+//            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
+//    })
+//    public ResponseEntity<List<TeamRankResponse>> getTeamRanks() {
+//        List<TeamRankResponse> ranks = BaseballTeam.getRankedTeams().stream()
+//                .map(entry -> new TeamRankResponse(
+//                        entry.getKey().name(),
+//                        entry.getValue().getRank(),
+//                        entry.getValue().getUpdatedAt()
+//                ))
+//                .collect(Collectors.toList());
+//
+//        return ResponseEntity.ok(ranks);
+//    }
+
     @GetMapping("/rank")
     @Operation(summary = "KBO 순위 조회", description = "현재 KBO 팀 순위를 확인")
-    @ApiErrorResponses({
-            @ApiErrorResponse(ErrorCode.UNAUTHORIZED)
-    })
     public ResponseEntity<List<TeamRankResponse>> getTeamRanks() {
-        List<TeamRankResponse> ranks = BaseballTeam.getRankedTeams().stream()
-                .map(entry -> new TeamRankResponse(
-                        entry.getKey().name(),
-                        entry.getValue().getRank(),
-                        entry.getValue().getUpdatedAt()
-                ))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(ranks);
+        return ResponseEntity.ok(matchRecordService.getTeamRanks());
     }
+
+
+
 
     private User getAuthenticatedUser(CustomUserDetails userDetails) {
         if (userDetails == null) {

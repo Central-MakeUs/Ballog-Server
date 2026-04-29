@@ -1,5 +1,6 @@
 package com.example.ballog.domain.emotion.repository;
 
+import com.example.ballog.domain.emotion.dto.response.TeamEmotionResponse;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.matchrecord.entity.MatchRecord;
@@ -10,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EmotionRepository extends JpaRepository<Emotion, Long> {
@@ -82,4 +84,33 @@ public interface EmotionRepository extends JpaRepository<Emotion, Long> {
     GROUP BY e.userId
     """)
     List<EmotionCountProjection> countEmotionByUserIds(@Param("userIds") List<Long> userIds);
+
+    @Query("""
+    SELECT new com.example.ballog.domain.emotion.dto.response.TeamEmotionResponse(
+        u.baseballTeam,
+        SUM(CASE WHEN e.emotionType = 'POSITIVE' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN e.emotionType = 'NEGATIVE' THEN 1 ELSE 0 END)
+    )
+    FROM Emotion e
+    JOIN User u ON e.userId = u.userId
+    WHERE u.baseballTeam <> 'NONE'
+    GROUP BY u.baseballTeam
+    """)
+    List<TeamEmotionResponse> countEmotionByTeam();
+
+    @Query("""
+    SELECT new  com.example.ballog.domain.emotion.dto.response.TeamEmotionResponse(
+        :team,
+        SUM(CASE WHEN e.emotionType = 'POSITIVE' THEN 1 ELSE 0 END),
+        SUM(CASE WHEN e.emotionType = 'NEGATIVE' THEN 1 ELSE 0 END)
+    )
+    FROM Emotion e
+    JOIN e.matches m
+    WHERE e.userId = :userId
+      AND (m.homeTeam = :team OR m.awayTeam = :team)
+    """)
+    Optional<TeamEmotionResponse> countMyEmotionByTeam(
+            @Param("userId") Long userId,
+            @Param("team") BaseballTeam team
+    );
 }
