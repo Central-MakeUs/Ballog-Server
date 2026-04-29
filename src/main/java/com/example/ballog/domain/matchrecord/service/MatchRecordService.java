@@ -3,11 +3,14 @@ package com.example.ballog.domain.matchrecord.service;
 import com.example.ballog.domain.Image.entity.Image;
 import com.example.ballog.domain.Image.respository.ImageRepository;
 import com.example.ballog.domain.Image.service.S3Service;
+import com.example.ballog.domain.baseball.entity.TeamRank;
+import com.example.ballog.domain.emotion.dto.response.TeamEmotionResponse;
 import com.example.ballog.domain.emotion.entity.Emotion;
 import com.example.ballog.domain.emotion.entity.EmotionType;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
 import com.example.ballog.domain.baseball.entity.BaseballTeam;
 import com.example.ballog.domain.login.entity.User;
+import com.example.ballog.domain.match.dto.response.TeamRankResponse;
 import com.example.ballog.domain.match.entity.Matches;
 import com.example.ballog.domain.match.repository.MatchesRepository;
 import com.example.ballog.domain.matchrecord.dto.request.MatchRecordRequest;
@@ -26,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -343,6 +347,43 @@ public class MatchRecordService {
         return new WinStats(winRate);
     }
     private record WinStats(double winRate) {}
+
+
+
+
+    public List<TeamRankResponse> getTeamRanks() {
+        Map<BaseballTeam, TeamEmotionResponse> emotionMap =
+                emotionRepository.countEmotionByTeam().stream()
+                        .collect(Collectors.toMap(
+                                TeamEmotionResponse::getTeam,
+                                Function.identity()
+                        ));
+
+        return BaseballTeam.getRankedTeams().stream()
+                .map(entry -> {
+                    BaseballTeam team = entry.getKey();
+                    TeamRank teamRank = entry.getValue();
+
+                    TeamEmotionResponse emotion = emotionMap.get(team);
+
+                    double positiveRate = 0.0;
+                    double negativeRate = 0.0;
+
+                    if (emotion != null) {
+                        positiveRate = emotion.getPositiveRate();
+                        negativeRate = emotion.getNegativeRate();
+                    }
+
+                    return new TeamRankResponse(
+                            team.name(),
+                            teamRank.getRank(),
+                            teamRank.getUpdatedAt(),
+                            positiveRate,
+                            negativeRate
+                    );
+                })
+                .toList();
+    }
 
 
 }

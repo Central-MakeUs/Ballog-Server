@@ -4,9 +4,12 @@ package com.example.ballog.domain.login.service;
 import com.example.ballog.domain.Image.respository.ImageRepository;
 import com.example.ballog.domain.alert.entity.Alert;
 import com.example.ballog.domain.alert.repository.AlertRepository;
+import com.example.ballog.domain.baseball.entity.BaseballTeam;
+import com.example.ballog.domain.emotion.dto.response.TeamEmotionResponse;
 import com.example.ballog.domain.emotion.repository.EmotionRepository;
 import com.example.ballog.domain.login.dto.request.SignupRequest;
 import com.example.ballog.domain.login.dto.request.TermAgreeRequest;
+import com.example.ballog.domain.login.dto.response.UserInfoResponse;
 import com.example.ballog.domain.login.entity.FcmToken;
 import com.example.ballog.domain.login.entity.OAuthToken;
 import com.example.ballog.domain.login.dto.request.UpdateUserRequest;
@@ -204,5 +207,36 @@ public class UserService {
         return oAuthTokenRepository.findByProviderAndProviderId("Apple", appleSub)
                 .map(OAuthToken::getUser)
                 .orElse(null);
+    }
+
+    public UserInfoResponse getUserInfo(User user) {
+
+        BaseballTeam team = user.getBaseballTeam();
+
+        double positiveRate = 0.0;
+        double negativeRate = 0.0;
+
+        // NONE 팀이면 계산 안함
+        if (team != BaseballTeam.NONE) {
+            Optional<TeamEmotionResponse> emotionOpt =
+                    emotionRepository.countMyEmotionByTeam(user.getUserId(), team);
+
+            if (emotionOpt.isPresent()) {
+                TeamEmotionResponse emotion = emotionOpt.get();
+                positiveRate = emotion.getPositiveRate();
+                negativeRate = emotion.getNegativeRate();
+            }
+        }
+
+        return new UserInfoResponse(
+                user.getUserId(),
+                user.getEmail(),
+                user.getNickname(),
+                team.name(),
+                user.getIsNewUser(),
+                user.getRole().name(),
+                positiveRate,
+                negativeRate
+        );
     }
 }

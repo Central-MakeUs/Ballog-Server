@@ -12,4 +12,6 @@ public class UserInfoResponse {
     private String baseballTeam;
     private Boolean isNewUser;
     private String role;
+    private double positiveRate;
+    private double negativeRate;
 }

@@ -350,21 +350,12 @@ public class UserController {
 
         if (userDetails == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
-
         }
 
-        User user = userDetails.getUser();
+        UserInfoResponse response = userService.getUserInfo(userDetails.getUser());
 
-        UserInfoResponse response = new UserInfoResponse(
-                user.getUserId(),
-                user.getEmail(),
-                user.getNickname(),
-                user.getBaseballTeam().name(),
-                user.getIsNewUser(),
-                user.getRole().name()
+        return ResponseEntity.ok(
+                BasicResponse.ofSuccess("회원 정보 조회 성공", response)
         );
-
-        return ResponseEntity.ok(BasicResponse.ofSuccess("회원 정보 조회 성공", response));
     }
-
 }
